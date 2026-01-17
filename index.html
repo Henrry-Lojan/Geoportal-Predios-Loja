@@ -948,9 +948,10 @@
             const { data, error } = await client.from('v_limites_barriales').select('*');
             if (error || !data) return console.error("Error barrios", error);
 
-            const barriosUnicos = [...new Set(data.map(d => d.barrio))].sort();
-            const colorMap = {};
-            barriosUnicos.forEach((b, i) => colorMap[b] = getColor(i));
+            // No necesitamos mapa de colores si vamos a usar transparencias
+            // const barriosUnicos = [...new Set(data.map(d => d.barrio))].sort();
+            // const colorMap = {};
+            // barriosUnicos.forEach((b, i) => colorMap[b] = getColor(i));
 
             const features = data.map(item => ({
                 type: "Feature", properties: item, geometry: item.geojson
@@ -958,16 +959,18 @@
 
             const geoJsonLayer = L.geoJSON(features, {
                 style: (feature) => ({
-                    color: colorMap[feature.properties.barrio] || '#333',
-                    fillColor: colorMap[feature.properties.barrio] || '#333',
-                    weight: 1,
-                    opacity: 0.8,
-                    fillOpacity: 0.2 // Transparente
+                    color: '#f8fafc', // Línea blanca/clara para contrastar con las parroquias
+                    weight: 1.5,
+                    dashArray: '4, 3', // Línea entrecortada
+                    fillColor: 'transparent', // Sin relleno para ver la parroquia debajo
+                    fillOpacity: 0,
+                    opacity: 0.9
                 }),
                 onEachFeature: (feature, layer) => {
                     layer.on('mouseover', function (e) {
                         const l = e.target;
-                        l.setStyle({ weight: 3, fillOpacity: 0.5 });
+                        l.setStyle({ weight: 2.5, color: '#fbbf24', dashArray: '', opacity: 1 }); // Resaltar borde amarillo
+                        l.bringToFront();
                     });
 
                     layer.on('mouseout', function (e) {
