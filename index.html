@@ -717,37 +717,57 @@
 
             /* Ajuste derecha móvil */
             #rightPanel {
-                right: 10px;
-                bottom: 80px;
-                /* Above bottom sheet */
+                display: flex !important;
+                /* Forzar mostrar */
+                right: 15px;
+                bottom: 120px;
+                /* Encima de la barra inferior (aprox 80px altura minimizada) */
                 top: auto;
+                width: 50px;
+                /* Solo iconos en móvil para ahorrar espacio ? o botones pequeños */
                 width: auto;
-                max-width: 60px;
-                /* Iconos solo en movil si se desea, o mantener panel */
-                display: none;
-                /* Ocultar por defecto */
+                max-width: 180px;
+                /* Limitar ancho en móvil */
+                align-items: flex-end;
+                /* Alinear a la derecha */
+                pointer-events: none;
+                /* click-through */
             }
 
+            #rightPanel button {
+                pointer-events: auto;
+                /* Botones interactivos */
+                padding: 8px 12px;
+                font-size: 11px;
+                width: 100%;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
 
+            .leaflet-control-layers-expanded {
+                max-width: 250px;
+                font-size: 12px;
+            }
         }
 
-
-
-
-        /* --- PANEL DERECHO DE ACCIONES --- */
+        /* --- PANEL DERECHO DE ACCIONES (Escritorio y Defecto) --- */
         #rightPanel {
             position: absolute;
             bottom: 30px;
             right: 20px;
-            width: 250px;
+            width: 200px;
+            /* Ancho fijo para alineación */
             background: transparent;
             z-index: 1000;
             display: none;
+            /* Se activa con JS al seleccionar predio */
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             pointer-events: none;
-            /* Para que no bloquee clics fuera de botones */
         }
+
+
 
         #rightPanel button {
             pointer-events: auto;
