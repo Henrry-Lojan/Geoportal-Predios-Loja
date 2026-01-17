@@ -715,35 +715,81 @@
                 gap: 10px;
             }
 
-            /* Ajuste derecha móvil */
+            /* Ajuste derecha móvil: Estilo "Google Maps" con botones circulares */
             #rightPanel {
                 display: flex !important;
-                /* Forzar mostrar */
                 right: 15px;
-                bottom: 120px;
-                /* Encima de la barra inferior (aprox 80px altura minimizada) */
+                bottom: 15vh;
+                /* Se ajusta dinámicamente */
                 top: auto;
-                width: 50px;
-                /* Solo iconos en móvil para ahorrar espacio ? o botones pequeños */
                 width: auto;
-                max-width: 180px;
-                /* Limitar ancho en móvil */
+                max-width: none;
                 align-items: flex-end;
-                /* Alinear a la derecha */
+                /* Todo a la derecha */
+                gap: 12px;
                 pointer-events: none;
-                /* click-through */
             }
 
             #rightPanel button {
                 pointer-events: auto;
-                /* Botones interactivos */
-                padding: 8px 12px;
-                font-size: 11px;
-                width: 100%;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                /* CIRCULARES */
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+                background: #10b981;
+                /* Color base */
+                border: 2px solid rgba(255, 255, 255, 0.2);
             }
+
+            /* Ocultar texto (segundo span), mostrar solo icono (primer span) */
+            #rightPanel button span:nth-child(2) {
+                display: none;
+            }
+
+            #rightPanel button span:first-child {
+                display: block;
+                /* Asegurar que el icono se vea */
+                font-size: 24px;
+                line-height: 1;
+            }
+
+            /* Ajuste Panel Inferior (Bottom Sheet) Premium */
+            #sidebar {
+                border-radius: 20px 20px 0 0;
+                background: rgba(15, 23, 42, 0.98);
+                /* Casi opaco */
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+            }
+
+            #sidebar.minimized {
+                transform: translateY(calc(100% - 80px));
+                /* Mostrar un poco más */
+            }
+
+            /* Barra de "Agarre" visual */
+            .sidebar-header::before {
+                content: '';
+                position: absolute;
+                top: 8px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 40px;
+                height: 5px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 3px;
+            }
+
+            .sidebar-header::after {
+                display: none;
+            }
+
+            /* Quitar anterior */
 
             .leaflet-control-layers-expanded {
                 max-width: 250px;
@@ -1637,19 +1683,19 @@
             // --- INYECTAR BOTONES EN PANEL DERECHO ---
             const rightPanelHtml = `
                 <button class="btn-report" onclick="generarReporte()">
-                    📄 Generar Informe Técnico
+                    <span>📄</span> <span>Generar Informe Técnico</span>
                 </button>
                 <button class="btn-report" style="background:#0284c7;" onclick="generarPlanimetria()">
-                    📐 Generar Planimetría
+                    <span>📐</span> <span>Generar Planimetría</span>
                 </button>
                 <button class="btn-report" style="background:#2563eb;" onclick="abrirCalculadora()">
-                    🧮 Calculadora Edificable
+                    <span>🧮</span> <span>Calculadora Edificable</span>
                 </button>
                 <button class="btn-report" style="background:#8b5cf6;" onclick="generarReporteCiudadano()">
-                    👋 Reporte Ciudadano
+                    <span>👋</span> <span>Reporte Ciudadano</span>
                 </button>
                 <button class="btn-report" style="background:#f43f5e;" onclick="verVecinos50m()">
-                    🏘️ Ver Vecinos (50m)
+                    <span>🏘️</span> <span>Ver Vecinos (50m)</span>
                 </button>
             `;
             const rp = document.getElementById('rightPanel');
