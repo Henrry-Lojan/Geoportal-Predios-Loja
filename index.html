@@ -776,27 +776,6 @@
             </div>
 
             <div id="planimetriaContent" style="display: flex; flex-direction: column; align-items: center;">
-                <!-- Mapas de Ubicación -->
-                <div
-                    style="width: 100%; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <!-- Mapa Barrio -->
-                    <div style="border: 1px solid #ddd; padding: 10px; background: #f8fafc;">
-                        <h4
-                            style="margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: #64748b; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px;">
-                            Ubicación en Barrio: <span id="lblBarrio" style="color:#0f172a; font-weight:700;"></span>
-                        </h4>
-                        <div id="mapLocationBarrio" style="height: 250px; width: 100%; background: #e2e8f0;"></div>
-                    </div>
-
-                    <!-- Mapa Parroquia -->
-                    <div style="border: 1px solid #ddd; padding: 10px; background: #f8fafc;">
-                        <h4
-                            style="margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: #64748b; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px;">
-                            Ubicación en Parroquia: <span id="lblParroquia"
-                                style="color:#0f172a; font-weight:700;"></span></h4>
-                        <div id="mapLocationParroquia" style="height: 250px; width: 100%; background: #e2e8f0;"></div>
-                    </div>
-                </div>
 
                 <!-- SVG Canvas -->
                 <div id="svgContainer"
@@ -804,9 +783,11 @@
                     <!-- SVG se inyecta aquí -->
                 </div>
 
-                <!-- Tabla de Coordenadas -->
+                <!-- Linderos Text Info (Debajo del mapa) -->
+                <div id="linderosInfoBox" style="width:100%; margin-bottom:20px;"></div>
+
                 <!-- Tabla de Coordenadas Container -->
-                <div id="tableContainer" style="width: 100%; margin-top: 20px;">
+                <div id="tableContainer" style="width: 100%;">
                     <!-- La tabla se generará aquí -->
                 </div>
                 <div style="margin-top: 20px; width:100%; text-align: left; font-size:12px;">
@@ -1653,13 +1634,32 @@
 
             // Norte Bonito
             const northSvg = `
-                <g transform = "translate(${vbW - 60}, 60)" >
+                <g transform="translate(${vbW - 60}, 60)">
                      <circle cx="0" cy="0" r="28" fill="white" stroke="#334155" stroke-width="1"/>
                      <path d="M 0,-22 L 6,-2 L 0,-8 L -6,-2 Z" fill="#ef4444" /> <!--Norte Rojo-->
                      <path d="M 0,22 L -6,2 L 0,8 L 6,2 Z" fill="#94a3b8" />   <!--Sur Gris-->
-                <text x="0" y="-26" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="14" fill="#1e293b">N</text>
+                    <text x="0" y="-26" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="14" fill="#1e293b">N</text>
                 </g>
-                `;
+            `;
+
+            // Linderos en el Mapa (Labels NSEW)
+            const linderosSvg = `
+                <!-- Norte -->
+                <text x="${vbW / 2}" y="25" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="700" font-size="11" fill="#475569" style="text-transform:uppercase;">Norte: Calle Pública (Proyección)</text>
+                
+                <!-- Sur -->
+                <text x="${vbW / 2}" y="${vbH - 10}" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="700" font-size="11" fill="#475569" style="text-transform:uppercase;">Sur: Predio Colindante</text>
+                
+                <!-- Este (Derecha) -->
+                <g transform="translate(${vbW - 15}, ${vbH / 2}) rotate(90)">
+                    <text x="0" y="0" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="700" font-size="11" fill="#475569" style="text-transform:uppercase;">Este: Predio Colindante</text>
+                </g>
+
+                <!-- Oeste (Izquierda) -->
+                <g transform="translate(15, ${vbH / 2}) rotate(-90)">
+                    <text x="0" y="0" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="700" font-size="11" fill="#475569" style="text-transform:uppercase;">Oeste: Quebrada S/N ⚠️</text>
+                </g>
+            `;
 
             // Generar Grilla UTM
             let gridSvg = "";
@@ -1705,6 +1705,7 @@
 
                     ${svgLabels}
                     ${northSvg}
+                    ${linderosSvg}
                     
                 <text x="${vbW - 10}" y="${vbH - 10}" text-anchor="end" font-family="'Inter', sans-serif" font-size="9" fill="#94a3b8">Grilla UTM WGS84 17S (cada ${step}m)</text>
                 </svg>
@@ -1737,104 +1738,21 @@
 
             document.getElementById('planoArea').innerText = area;
 
-            // Inyectar Análisis de Linderos
+            // Inyectar Análisis de Linderos en caja separada (Limpia duplicados)
             const linderosHtml = `
-                <div style = "width:100%; margin-top:20px; border:1px solid #333; padding:15px;" >
-                    <h4 style="margin:0 0 10px 0; text-align:center; text-transform:uppercase;">Análisis de Linderos</h4>
+                <div style="border:1px solid #cbd5e1; padding:15px; background:#f8fafc; border-radius:8px;">
+                    <h4 style="margin:0 0 10px 0; text-align:center; text-transform:uppercase; color:#334155;">Detalle de Linderos</h4>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:11px;">
                         <div><strong>NORTE:</strong> Calle Pública (proyección)</div>
                         <div><strong>SUR:</strong> Predio Colindante (Particular)</div>
                         <div><strong>ESTE:</strong> Predio Colindante (Particular)</div>
-                        <div><strong>OESTE:</strong> <span style="color:red">Quebrada S/N (Servidumbre 5m) ⚠️</span></div>
+                        <div><strong>OESTE:</strong> <span style="color:#ef4444; font-weight:700;">Quebrada S/N (Servidumbre 5m) ⚠️</span></div>
                     </div>
                 </div>
-                `;
-            document.getElementById('tableContainer').insertAdjacentHTML('afterend', linderosHtml);
+            `;
+            document.getElementById('linderosInfoBox').innerHTML = linderosHtml;
 
             document.getElementById('planimetriaModal').classList.add('active');
-
-            // --- Generación de Mapas de Ubicación ---
-
-            // 1. Limpiar versiones previas
-            if (mapLocBarrio) { mapLocBarrio.remove(); mapLocBarrio = null; }
-            if (mapLocParroquia) { mapLocParroquia.remove(); mapLocParroquia = null; }
-
-            // Actualizar etiquetas
-            const nombreBarrio = currentData.ubicacion?.nombre_barrio || 'DESCONOCIDO';
-            const nombreParroquia = currentData.ubicacion?.nombre_parroquia || 'DESCONOCIDA';
-
-            document.getElementById('lblBarrio').innerText = nombreBarrio;
-            document.getElementById('lblParroquia').innerText = nombreParroquia;
-
-            // Esperar un momento a que el modal sea visible para renderizar mapas
-            setTimeout(async () => {
-                // Configuración común
-                const mapOptions = {
-                    zoomControl: false,
-                    attributionControl: false,
-                    dragging: false,
-                    scrollWheelZoom: false,
-                    doubleClickZoom: false,
-                    boxZoom: false
-                };
-
-                // --- MAPA BARRIO ---
-                mapLocBarrio = L.map('mapLocationBarrio', mapOptions);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { opacity: 0.5 }).addTo(mapLocBarrio);
-
-                // Obtener geometría del barrio
-                const { data: dataBarrio } = await client.from('v_limites_barriales')
-                    .select('geojson')
-                    .eq('barrio', nombreBarrio)
-                    .single();
-
-                if (dataBarrio && dataBarrio.geojson) {
-                    const barrioLayer = L.geoJSON(dataBarrio.geojson, {
-                        style: { color: '#0891b2', weight: 2, fillColor: '#0891b2', fillOpacity: 0.1 }
-                    }).addTo(mapLocBarrio);
-
-                    barrioLayer.bindTooltip(nombreBarrio, { permanent: true, direction: "center", className: "parroquia-label" });
-
-                    // Dibujar el predio encima
-                    L.geoJSON(geojson, {
-                        style: { color: '#ef4444', weight: 2, fillColor: '#ef4444', fillOpacity: 0.9 }
-                    }).addTo(mapLocBarrio);
-
-                    mapLocBarrio.fitBounds(barrioLayer.getBounds(), { padding: [20, 20] });
-                } else {
-                    const predioL = L.geoJSON(geojson).addTo(mapLocBarrio);
-                    mapLocBarrio.fitBounds(predioL.getBounds(), { maxZoom: 16 });
-                }
-
-                // --- MAPA PARROQUIA ---
-                mapLocParroquia = L.map('mapLocationParroquia', mapOptions);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { opacity: 0.5 }).addTo(mapLocParroquia);
-
-                // Obtener geometría parroquia
-                const { data: dataParroquia } = await client.from('v_parroquias')
-                    .select('geojson')
-                    .eq('nombre', nombreParroquia)
-                    .single();
-
-                if (dataParroquia && dataParroquia.geojson) {
-                    const parrLayer = L.geoJSON(dataParroquia.geojson, {
-                        style: { color: '#e11d48', weight: 3, fillColor: '#e11d48', fillOpacity: 0.05 }
-                    }).addTo(mapLocParroquia);
-
-                    parrLayer.bindTooltip(nombreParroquia, { permanent: true, direction: "center", className: "parroquia-label" });
-
-                    // Dibujar el predio
-                    L.geoJSON(geojson, {
-                        style: { color: '#ef4444', weight: 2, fillColor: '#ef4444', fillOpacity: 1 }
-                    }).addTo(mapLocParroquia);
-
-                    mapLocParroquia.fitBounds(parrLayer.getBounds(), { padding: [10, 10] });
-                } else {
-                    const predioL = L.geoJSON(geojson).addTo(mapLocParroquia);
-                    mapLocParroquia.setView(predioL.getBounds().getCenter(), 12);
-                }
-
-            }, 300); // Delay para asegurar renderizado DOM
         }
 
         function abrirCalculadora() {
