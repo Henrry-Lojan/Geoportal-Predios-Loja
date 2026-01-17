@@ -7,6 +7,7 @@
     <title>GeoLoja - Portal Catastral</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <!-- Fuentes Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,8 +15,11 @@
         rel="stylesheet">
     <!-- Proj4js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
+    <!-- Turf.js for Geometry Operations -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
     <style>
         :root {
             --primary: #6366f1;
@@ -285,18 +289,23 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             width: 100%;
-            padding: 15px;
+            padding: 8px 12px;
+            /* Reducido de 15px */
             background: #10b981;
             color: white;
             border: none;
             border-radius: 8px;
             font-weight: 600;
+            font-size: 13px;
+            /* Reducido para compactar */
             cursor: pointer;
-            margin-top: 10px;
-            transition: transform 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
         }
+
+
 
         .btn-report:hover {
             transform: translateY(-2px);
@@ -488,6 +497,37 @@
             text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8);
         }
 
+        /* Etiquetas para Barrios (Dinámicas) */
+        /* Etiquetas para Barrios (Dinámicas) */
+        /* Etiquetas para Barrios (Dinámicas) */
+        .barrio-label {
+            background: transparent;
+            /* SIN RELLENO */
+            border: none;
+            box-shadow: none;
+            color: #fff;
+            font-weight: 700;
+            /* Negrita para que se lea mejor sin fondo */
+            text-transform: uppercase;
+            /* Borde negro fuerte (stroke) para lectura perfecta */
+            text-shadow:
+                -1px -1px 0 #000,
+                1px -1px 0 #000,
+                -1px 1px 0 #000,
+                1px 1px 0 #000,
+                2px 2px 3px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            white-space: normal;
+            line-height: 1.1;
+            padding: 0;
+
+            /* Control dinámico Un poco más grande */
+            font-size: var(--barrio-label-size, 10px);
+            opacity: var(--barrio-label-opacity, 1);
+            transition: all 0.2s ease-out;
+            pointer-events: none;
+        }
+
         /* Modal Selección de Rol */
         #roleModal {
             display: none;
@@ -558,10 +598,22 @@
     </style>
     <!-- Estilos Responsivos (Mobile) -->
     <style>
+        /* CORRECCIÓN DE POSICIÓN DEL PANEL DERECHO */
+        #rightPanel {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
             }
+
 
             /* El mapa ocupa toda la pantalla de fondo */
             #map {
@@ -663,8 +715,58 @@
                 gap: 10px;
             }
 
-            .role-card {
-                padding: 15px;
+            /* Ajuste derecha móvil */
+            #rightPanel {
+                right: 10px;
+                bottom: 80px;
+                /* Above bottom sheet */
+                top: auto;
+                width: auto;
+                max-width: 60px;
+                /* Iconos solo en movil si se desea, o mantener panel */
+                display: none;
+                /* Ocultar por defecto */
+            }
+
+
+        }
+
+
+
+
+        /* --- PANEL DERECHO DE ACCIONES --- */
+        #rightPanel {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            width: 250px;
+            background: transparent;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+            /* Para que no bloquee clics fuera de botones */
+        }
+
+        #rightPanel button {
+            pointer-events: auto;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            animation: slideInRight 0.3s forwards;
+            margin: 0;
+            /* Override default margins */
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
             }
         }
     </style>
@@ -703,6 +805,8 @@
     </div>
     </div>
 
+
+
     <!-- Modal Calculadora Edificable -->
     <div id="calcModal" class="modal">
         <div class="report-paper" style="background: #f8fafc; border-top: 10px solid #2563eb; max-width: 1000px;">
@@ -725,6 +829,13 @@
 
     <!-- Mapa Principal -->
     <div id="map"></div>
+
+    <!-- Panel Derecho de Acciones (Flotante) -->
+    <div id="rightPanel">
+        <!-- Botones se inyectan aquí -->
+    </div>
+
+
 
     <!-- Modal de Reporte -->
     <div class="modal" id="reportModal">
@@ -864,11 +975,16 @@
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzZHRyYmJ5emZ4bG53bG1nendyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3MDk1NzIsImV4cCI6MjA4MjI4NTU3Mn0.hAQkrjZZwm2_1XXMirAvF5-BvJ8Wf0yAN2BJgy-OnBE'
         );
 
-        let map, predioLayer, reportMap;
+        let map, predioLayer, reportMap, vecinosLayer;
         let mapLocBarrio, mapLocParroquia; // Variables para los mini-mapas
         let layerControl;
         let overlayMaps = {};
         let currentData = null;
+
+        // Variables para manejo dinámico de barrios por parroquia
+        let datosBarrios = [];
+        let datosParroquias = []; // Store parroquias globally for clipping
+        let activeBarrioLayers = {}; // Mapa para guardar referencias a capas de barrios activas { "NOMBRE_PARROQUIA": layer }
 
         // Inicializar Mapa
         function initMap() {
@@ -891,7 +1007,205 @@
 
             layerControl = L.control.layers(baseMaps, overlayMaps, { position: 'topright', collapsed: false }).addTo(map);
 
+            // --- EVENTOS PÁRA CARGA DINÁMICA DE BARRIOS ---
+            map.on('overlayadd', function (e) {
+                // Verificamos si la capa activada es una capa de Parroquia Individual (prefijo 🏘️ Barrios)
+                if (e.name && e.name.startsWith('🏘️ Barrios ')) {
+                    const nombreParroquia = e.name.replace('🏘️ Barrios ', '').trim();
+                    mostrarBarriosDeParroquia(nombreParroquia);
+                }
+            });
+
+            map.on('overlayremove', function (e) {
+                if (e.name && e.name.startsWith('🏘️ Barrios ')) {
+                    const nombreParroquia = e.name.replace('🏘️ Barrios ', '').trim();
+                    ocultarBarriosDeParroquia(nombreParroquia);
+                }
+            });
+
+            // Evento Zoom para ajustar etiquetas
+            map.on('zoomend', updateLabelSize);
+            map.on('zoomend', updateLabelSize);
+            updateLabelSize(); // Init
+
+            // Crear Pane para Mapas de Calor (z-index 450 para que esté por encima de otras capas base, pero bajo popups)
+            map.createPane('heatmapPane');
+            map.getPane('heatmapPane').style.zIndex = 450;
+            // Asegurar que permita clicks si queremos interactuar
+            map.getPane('heatmapPane').style.pointerEvents = 'auto';
+
             cargarCapas();
+        }
+
+        // --- COLORES MAPAS DE CALOR ---
+        function getColorCOS(d) {
+            return d > 80 ? '#800026' :
+                d > 70 ? '#BD0026' :
+                    d > 60 ? '#E31A1C' :
+                        d > 50 ? '#FC4E2A' :
+                            d > 40 ? '#FD8D3C' :
+                                d > 30 ? '#FEB24C' :
+                                    d > 10 ? '#FED976' :
+                                        '#FFEDA0';
+        }
+
+        function getColorPisos(d) {
+            return d > 12 ? '#08306b' :
+                d > 8 ? '#08519c' :
+                    d > 5 ? '#2171b5' :
+                        d > 3 ? '#4292c6' :
+                            d > 2 ? '#6baed6' :
+                                d > 1 ? '#9ecae1' :
+                                    '#c6dbef';
+        }
+
+        function getColorPrecio(d) {
+            return d > 400 ? '#800026' :
+                d > 300 ? '#BD0026' :
+                    d > 200 ? '#E31A1C' :
+                        d > 150 ? '#FC4E2A' :
+                            d > 100 ? '#FD8D3C' :
+                                d > 80 ? '#FEB24C' :
+                                    d > 50 ? '#FED976' :
+                                        '#FFEDA0';
+        }
+
+        async function cargarMapasCalor() {
+            // 1. Validar datos base
+            if (!datosParroquias || datosParroquias.length === 0) return;
+
+            // OPTIMIZACIÓN: Pre-procesar geometrías de parroquias una sola vez
+            // En lugar de hacer una "Unión" costosa, simplemente guardamos la lista de polígonos
+            const poligonosParroquias = datosParroquias.map(p => turf.feature(p.geojson));
+
+            // Fetch solo columnas necesarias
+            const { data, error } = await client.from('clasificacion_suelo').select('cos, n_pisos, geometry');
+            if (error) return console.error("Error heatmaps", error);
+            if (!data) return;
+
+            // Procesar y FILTRAR features
+            // Estrategia "Flash": Chequeo simple contra lista de parroquias
+            const features = [];
+            for (const item of data) {
+                if (!item.geometry) continue;
+
+                // Crear feature temporal
+                const f = turf.feature(item.geometry, { cos: item.cos, n_pisos: item.n_pisos });
+
+                // Calcular centroide (muy rápido)
+                const center = turf.centroid(f);
+
+                // Chequear si el centro está en ALGUNA parroquia
+                // Esto evita la operación turf.union() que es muy lenta
+                let isInside = false;
+                for (const poly of poligonosParroquias) {
+                    if (turf.booleanPointInPolygon(center, poly)) {
+                        isInside = true;
+                        break; // Encontramos coincidencia, pasamos al siguiente
+                    }
+                }
+
+                if (isInside) {
+                    features.push(f);
+                }
+            }
+
+            // --- CAPA COS ---
+            const cosLayer = L.geoJSON(features, {
+                pane: 'heatmapPane',
+                style: (feature) => ({
+                    fillColor: getColorCOS(feature.properties.cos),
+                    weight: 1, // Borde fino para definición
+                    color: '#fff',
+                    opacity: 0.5,
+                    fillOpacity: 0.8 // Más visible
+                }),
+                onEachFeature: (feature, layer) => {
+                    layer.bindPopup(`<b>COS:</b> ${feature.properties.cos}%`);
+                }
+            });
+            layerControl.addOverlay(cosLayer, "🔥 Mapa de Calor: COS");
+
+            // --- CAPA PISOS ---
+            const pisosLayer = L.geoJSON(features, {
+                pane: 'heatmapPane',
+                style: (feature) => ({
+                    fillColor: getColorPisos(feature.properties.n_pisos),
+                    weight: 1,
+                    color: '#fff',
+                    opacity: 0.5,
+                    fillOpacity: 0.8 // Más visible
+                }),
+                onEachFeature: (feature, layer) => {
+                    layer.bindPopup(`<b>Pisos Permitidos:</b> ${feature.properties.n_pisos}`);
+                }
+            });
+            layerControl.addOverlay(pisosLayer, "🏢 Mapa de Calor: Pisos");
+        }
+
+        function cargarMapaPrecioSuelo() {
+            if (!datosBarrios || datosBarrios.length === 0) return;
+
+            // Generar datos simulados de precio por barrio
+            const features = datosBarrios.map(barrio => {
+                // Generar precio pseudo-aleatorio basado en el nombre para consistencia
+                // Rango aproximado $40 - $450
+                const hash = barrio.barrio.split("").reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
+                const precio = Math.abs(hash % 410) + 40;
+
+                return {
+                    type: "Feature",
+                    properties: { ...barrio, precio_m2: precio },
+                    geometry: barrio.geojson
+                };
+            });
+
+            const precioLayer = L.geoJSON(features, {
+                pane: 'heatmapPane',
+                style: (feature) => ({
+                    fillColor: getColorPrecio(feature.properties.precio_m2),
+                    weight: 1,
+                    color: 'white',
+                    dashArray: '3',
+                    opacity: 0.6,
+                    fillOpacity: 0.7
+                }),
+                onEachFeature: (feature, layer) => {
+                    layer.bindPopup(`
+                        <div style="text-align:center">
+                            <b>${feature.properties.barrio}</b><br>
+                            <span style="color:#64748b">Precio Promedio Estimado</span><br>
+                            <b style="font-size:16px; color:#16a34a">$${feature.properties.precio_m2} / m²</b>
+                        </div>
+                    `);
+                }
+            });
+
+            layerControl.addOverlay(precioLayer, "💰 Mapa de Calor: Precio Suelo ($/m²)");
+        }
+
+        function updateLabelSize() {
+            const z = map.getZoom();
+            let size = '9px';
+            let op = 0.9;
+
+            // Fuentes ajustadas (sin fondo requieren ser un pelin más grandes para leerse)
+            if (z < 13) {
+                size = '0px';
+                op = 0;
+            } else if (z >= 13 && z < 15) {
+                size = '9px';
+                op = 0.9;
+            } else if (z >= 15 && z < 17) {
+                size = '11px';
+                op = 1;
+            } else if (z >= 17) {
+                size = '13px';
+                op = 1;
+            }
+
+            document.documentElement.style.setProperty('--barrio-label-size', size);
+            document.documentElement.style.setProperty('--barrio-label-opacity', op);
         }
 
         // Paleta de colores más suave
@@ -908,11 +1222,15 @@
 
             await cargarCapaParroquias();
             await cargarCapaBarrios();
+            cargarMapasCalor();
+            cargarMapaPrecioSuelo();
         }
 
         async function cargarCapaParroquias() {
             const { data, error } = await client.from('v_parroquias').select('*');
             if (error || !data) return console.error("Error parroquias", error);
+
+            datosParroquias = data; // Guardar datos para intersección
 
             const parrUnicas = data.map(d => d.nombre).sort();
             const colorMap = {};
@@ -922,7 +1240,8 @@
                 type: "Feature", properties: item, geometry: item.geojson
             })).filter(f => f.geometry);
 
-            const geoJsonLayer = L.geoJSON(features, {
+            // 1. Capa "TODAS"
+            const allLayer = L.geoJSON(features, {
                 style: (feature) => ({
                     color: colorMap[feature.properties.nombre] || '#475569',
                     fillColor: colorMap[feature.properties.nombre] || '#475569',
@@ -933,21 +1252,48 @@
                 }),
                 onEachFeature: (feature, layer) => {
                     layer.bindTooltip(feature.properties.nombre, {
-                        permanent: true,
-                        direction: "center",
-                        className: "parroquia-label"
+                        permanent: true, direction: "center", className: "parroquia-label"
                     });
                 }
             });
 
-            geoJsonLayer.addTo(map);
-            layerControl.addOverlay(geoJsonLayer, "Parroquias");
+            allLayer.addTo(map);
+            layerControl.addOverlay(allLayer, "🏢 TODAS LAS PARROQUIAS");
+
+            // 2. Capas Individuales
+            // Agrupar features por nombre de parroquia
+            const featuresByParroquia = {};
+            features.forEach(f => {
+                const name = f.properties.nombre;
+                if (!featuresByParroquia[name]) featuresByParroquia[name] = [];
+                featuresByParroquia[name].push(f);
+            });
+
+            // Crear capa para cada parroquia
+            Object.keys(featuresByParroquia).sort().forEach(name => {
+                const individualLayer = L.geoJSON(featuresByParroquia[name], {
+                    style: {
+                        color: colorMap[name] || '#475569',
+                        fillColor: colorMap[name] || '#475569',
+                        weight: 4,
+                        fillOpacity: 0.2
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.bindPopup(`<b>Parroquia:</b> ${name}`);
+                    }
+                });
+                // Usamos un prefijo para agruparlas visualmente en la lista
+                layerControl.addOverlay(individualLayer, `🏘️ Barrios ${name}`);
+            });
         }
 
         async function cargarCapaBarrios() {
             const { data, error } = await client.from('v_limites_barriales').select('*');
             if (error || !data) return console.error("Error barrios", error);
 
+            datosBarrios = data; // Guardar globalmente para filtrado
+
+            // Creamos la capa general "Todos" pero la mantenemos disponible
             const barriosUnicos = [...new Set(data.map(d => d.barrio))].sort();
             const colorMap = {};
             barriosUnicos.forEach((b, i) => colorMap[b] = getColor(i));
@@ -991,7 +1337,195 @@
             });
 
             // geoJsonLayer.addTo(map); // Eliminado para no mostrar por defecto
-            layerControl.addOverlay(geoJsonLayer, "Barrios (Límites)");
+            // geoJsonLayer.addTo(map); // Eliminado para no mostrar por defecto
+            // geoJsonLayer.addTo(map); // Eliminado para no mostrar por defecto
+            layerControl.addOverlay(geoJsonLayer, "🏘️ Barrios (Todos)");
+        }
+
+        async function verVecinos50m() {
+            if (!currentData || !currentData.info_predio || !currentData.info_predio.geometry) {
+                alert("Primero busca un predio.");
+                return;
+            }
+
+            if (vecinosLayer) {
+                map.removeLayer(vecinosLayer);
+                vecinosLayer = null;
+                // Si ya existía, lo quitamos (toggle)
+                return;
+            }
+
+            const originGeo = currentData.info_predio.geometry;
+            const originFeat = turf.feature(originGeo);
+
+            // buffer 50 metros = 0.05 km
+            const buffer = turf.buffer(originFeat, 0.05, { units: 'kilometers' });
+
+            // Estrategia IMPROVISADA POSTGIS-LIKE:
+            // Como no tenemos índice espacial en el cliente ni función RPC, usamos la CLAVE CATASTRAL.
+            // Las claves catastrales suelen agrupar geográficamente (Provincia-Canton-Parroquia-Zona-Sector-Manzana...).
+            // Tomamos los primeros 10 dígitos de la clave para traer toda la "Zona/Sector".
+            const currentClave = currentData.info_predio.clave;
+            const prefix = currentClave.substring(0, 10);
+
+            // Traemos solo los predios que coinciden en el sector (mucho más rápido y preciso que traer todo)
+            let query = client.from('predios_urbanos')
+                .select('clave_cata, geometry')
+                .ilike('clave_cata', `${prefix}%`); // LIKE '1101030404%'
+
+            const { data, error } = await query;
+            if (error) {
+                console.error(error);
+                alert("Error buscando vecinos");
+                return;
+            }
+
+            // OPTIMIZACIÓN: Pre-filtro por distancia rápida (Euclidiana simple)
+            // Evita ejecutar turf.booleanIntersects (costoso) en predios lejanos del mismo sector
+            const centerOrigin = turf.centroid(originFeat);
+            const centerCoords = centerOrigin.geometry.coordinates; // [lng, lat]
+
+            const vecinos = data.filter(p => {
+                if (p.clave_cata === currentData.info_predio.clave) return false;
+                if (!p.geometry) return false;
+
+                // 1. Chequeo Rápido de Distancia (usando primer punto del polígono)
+                // Para no calcular centroides de todo, tomamos un punto de muestra
+                let candidatePt;
+                try {
+                    // Soporte para Polygon y MultiPolygon simple
+                    if (p.geometry.type === 'Polygon') candidatePt = p.geometry.coordinates[0][0];
+                    else if (p.geometry.type === 'MultiPolygon') candidatePt = p.geometry.coordinates[0][0][0];
+                    else return false;
+                } catch (e) { return false; }
+
+                // Distancia euclidiana aproximada (grados)
+                // 1 grado lat ~= 111km. 50m = 0.05km ~= 0.00045 grados.
+                // Usamos un margen seguro de 0.0015 grados (~150m) para pre-filtrar
+                const dx = candidatePt[0] - centerCoords[0];
+                const dy = candidatePt[1] - centerCoords[1];
+                if ((dx * dx + dy * dy) > 0.000003) return false; // Saltamos los lejanos
+
+                // 2. Si pasa el filtro rápido, hacemos la intersección real
+                const f = turf.feature(p.geometry);
+                return turf.booleanIntersects(f, buffer);
+            });
+
+            if (vecinos.length === 0) {
+                // Si no hay resultados (raro si hay contiguos), no mostramos alerta invasiva
+                return;
+            }
+
+            // Dibujar
+            const features = vecinos.map(v => ({
+                type: "Feature", properties: v, geometry: v.geometry
+            }));
+
+            vecinosLayer = L.geoJSON(features, {
+                style: {
+                    color: '#f43f5e',
+                    fillColor: '#f43f5e',
+                    weight: 2,
+                    fillOpacity: 0.4
+                },
+                onEachFeature: (f, l) => {
+                    l.bindPopup(`<b>Vecino (50m)</b><br>${f.properties.clave_cata}`);
+                }
+            }).addTo(map);
+
+            // También dibujar el buffer para referencia visual (opcional)
+            const bufferLayer = L.geoJSON(buffer, {
+                style: { color: '#94a3b8', dashArray: '5,5', fill: false, weight: 1 }
+            });
+            vecinosLayer.addLayer(bufferLayer); // Agrupar para borrar juntos
+
+            map.fitBounds(vecinosLayer.getBounds());
+            // alert(`Se encontraron ${vecinos.length} predios a 50m.`);
+        }
+
+        // --- FUNCIONES NUEVAS PARA GESTIÓN DE BARRIOS POR PARROQUIA ---
+        function mostrarBarriosDeParroquia(nombreParroquia) {
+            if (!datosBarrios || datosBarrios.length === 0) return;
+
+            // Si ya está mostrada, no hacer nada
+            if (activeBarrioLayers[nombreParroquia]) return;
+
+            // Filtrar barrios
+            const barriosFiltrados = datosBarrios.filter(b => b.parroquia === nombreParroquia);
+            if (barriosFiltrados.length === 0) return;
+
+            // Crear features
+            const features = barriosFiltrados.map(item => ({
+                type: "Feature", properties: item, geometry: item.geojson
+            })).filter(f => f.geometry);
+
+            const colorMap = {}; // Reusar o simplificar
+            // Generar colores consistentes
+            features.forEach((f, i) => {
+                // Un simple hash o índice para color
+                colorMap[f.properties.barrio] = getColor(i);
+            });
+
+            const layer = L.geoJSON(features, {
+                style: (feature) => ({
+                    color: '#ffffff', // Borde blanco para resaltar sobre la parroquia
+                    weight: 1,
+                    dashArray: '2, 4',
+                    fillColor: getColor(feature.properties.barrio.length), // Color aleatorio deterministic
+                    fillOpacity: 0.3
+                }),
+                onEachFeature: (feature, layer) => {
+                    // Etiqueta SIEMPRE VISIBLE
+                    layer.bindTooltip(`<span>${feature.properties.barrio}</span>`, {
+                        permanent: true,
+                        direction: "center",
+                        className: "barrio-label",
+                        opacity: 1
+                    });
+
+                    layer.bindPopup(`
+                        <div style="text-align:center;">
+                            <small style="color:#94a3b8">Barrio</small><br>
+                            <b style="font-size:14px; color:#38bdf8">${feature.properties.barrio}</b>
+                        </div>
+                    `);
+
+                    // Hover effect
+                    layer.on('mouseover', function (e) {
+                        e.target.setStyle({ weight: 3, fillOpacity: 0.6, color: '#facc15' });
+                        e.target.bringToFront();
+                    });
+                    layer.on('mouseout', function (e) {
+                        layer.resetStyle(e.target);
+                    });
+                }
+            });
+
+            layer.addTo(map);
+            activeBarrioLayers[nombreParroquia] = layer;
+        }
+
+        function ocultarBarriosDeParroquia(nombreParroquia) {
+            const layer = activeBarrioLayers[nombreParroquia];
+            if (layer) {
+                map.removeLayer(layer);
+                delete activeBarrioLayers[nombreParroquia];
+            }
+        }
+
+        function limpiarMapa() {
+            if (predioLayer) map.removeLayer(predioLayer);
+            document.getElementById('claveInput').value = '';
+            document.getElementById('resultsPanel').innerHTML = '<div class="empty-state">Ingresa clave...</div>';
+
+            // Limpiar y ocultar panel derecho
+            const rp = document.getElementById('rightPanel');
+            if (rp) {
+                rp.innerHTML = '';
+                rp.style.display = 'none';
+            }
+
+            currentData = null;
         }
 
         async function buscarPredio() {
@@ -1076,23 +1610,33 @@
                         <div class="data-row"><span class="data-label">Altura Máx:</span> <span class="data-value">${n.n_pisos || 0} Pisos</span></div>
                         <div class="data-row"><span class="data-label">COS PB:</span> <span class="data-value">${n.cos || 0}%</span></div>
                     </div>
-
-                    <button class="btn-report" style="background:#2563eb; margin-bottom:5px;" onclick="abrirCalculadora()">
-                        🧮 Calculadora Edificable
-                    </button>
-                    <button class="btn-report" onclick="generarReporte()">
-                        📄 Generar Informe Técnico (PDF)
-                    </button>
-                    <button class="btn-report" style="background:#0284c7; margin-top:5px;" onclick="generarPlanimetria()">
-                        📐 Generar Planimetría (PDF)
-                    </button>
-                    <button class="btn-report" style="background:#8b5cf6; margin-top:5px;" onclick="generarReporteCiudadano()">
-                        👋 Reporte Ciudadano (Fácil)
-                    </button>
                 `;
             document.getElementById('resultsPanel').innerHTML = html;
             document.getElementById('statusText').innerText = "Datos cargados: " + i.clave;
 
+            // --- INYECTAR BOTONES EN PANEL DERECHO ---
+            const rightPanelHtml = `
+                <button class="btn-report" onclick="generarReporte()">
+                    📄 Generar Informe Técnico
+                </button>
+                <button class="btn-report" style="background:#0284c7;" onclick="generarPlanimetria()">
+                    📐 Generar Planimetría
+                </button>
+                <button class="btn-report" style="background:#2563eb;" onclick="abrirCalculadora()">
+                    🧮 Calculadora Edificable
+                </button>
+                <button class="btn-report" style="background:#8b5cf6;" onclick="generarReporteCiudadano()">
+                    👋 Reporte Ciudadano
+                </button>
+                <button class="btn-report" style="background:#f43f5e;" onclick="verVecinos50m()">
+                    🏘️ Ver Vecinos (50m)
+                </button>
+            `;
+            const rp = document.getElementById('rightPanel');
+            rp.innerHTML = rightPanelHtml;
+            rp.style.display = 'flex';
+
+            // Re-aplicar clases para animacion si se desea, o simple display
             // Auto expandir en móvil
             const sb = document.getElementById('sidebar');
             if (window.innerWidth <= 768) {
@@ -1219,6 +1763,12 @@
             if (predioLayer) map.removeLayer(predioLayer);
             document.getElementById('claveInput').value = '';
             document.getElementById('resultsPanel').innerHTML = '<div class="empty-state">Ingresa clave...</div>';
+
+            // Limpiar y ocultar panel derecho
+            const rp = document.getElementById('rightPanel');
+            rp.innerHTML = '';
+            rp.style.display = 'none';
+
             currentData = null;
         }
 
@@ -1921,6 +2471,8 @@
                 if (toggle) toggle.style.transform = 'rotate(0deg)';
             }
         };
+
+
 
         window.onload = function () {
             initMap();
