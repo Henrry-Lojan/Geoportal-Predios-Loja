@@ -53,8 +53,18 @@
         }
 
         .sidebar-header {
-            padding: 30px;
-            border-bottom: 1px solid #334155;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: inherit;
+            /* Ensure background allows layering */
+        }
+
+        #sidebar.minimized {
+            transform: translateY(calc(100% - 80px));
         }
 
         .logo-title {
@@ -513,6 +523,11 @@
                 /* Ahorrar espacio en móvil */
             }
 
+            .mobile-toggle {
+                display: block !important;
+                transition: transform 0.3s;
+            }
+
             /* Indicador de "Deslizar" */
             .sidebar-header::after {
                 content: '';
@@ -566,8 +581,9 @@
 
     <!-- Sidebar -->
     <div id="sidebar">
-        <div class="sidebar-header">
+        <div class="sidebar-header" onclick="toggleSidebarMobile()">
             <div class="logo-title">🏛️ GeoLoja</div>
+            <div class="mobile-toggle" style="display:none; font-size:18px; color:#94a3b8;">🔽</div>
             <div class="logo-subtitle">Sistema de Información y Gestión Catastral</div>
         </div>
 
@@ -1703,6 +1719,31 @@
                 document.getElementById('roleModal').classList.add('active');
             }
         }
+
+        // Función para móviles: Colapsar/Expandir panel
+        function toggleSidebarMobile() {
+            if (window.innerWidth > 768) return; // Solo móvil
+            const sb = document.getElementById('sidebar');
+            sb.classList.toggle('minimized');
+
+            // Rotar flecha si existe
+            const toggle = sb.querySelector('.mobile-toggle');
+            if (toggle) {
+                toggle.style.transform = sb.classList.contains('minimized') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        }
+
+        // Auto-expandir al buscar
+        const _origMostrar = mostrarResultados;
+        mostrarResultados = function (d) {
+            _origMostrar(d);
+            const sb = document.getElementById('sidebar');
+            if (window.innerWidth <= 768) {
+                sb.classList.remove('minimized');
+                const toggle = sb.querySelector('.mobile-toggle');
+                if (toggle) toggle.style.transform = 'rotate(0deg)';
+            }
+        };
 
         window.onload = function () {
             initMap();
