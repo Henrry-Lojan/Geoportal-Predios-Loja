@@ -1161,7 +1161,7 @@
             if (!isNaN(usoSuelo) && n.uso_general) usoSuelo = n.uso_general;
 
             const popupContent = `
-                < div style = "font-family:'Inter',sans-serif; min-width: 260px;" >
+                <div style = "font-family:'Inter',sans-serif; min-width: 260px;" >
                     <h3 style="margin:0 0 10px 0; color:#cbd5e1; font-size:12px; text-transform:uppercase; border-bottom: 1px solid #475569; padding-bottom: 5px;">INFORMACIÓN DEL PREDIO</h3>
                     
                     <div style="display:grid; grid-template-columns: 1fr; gap:8px; font-size:12px;">
@@ -1226,7 +1226,7 @@
                             <span style="color:#38bdf8; font-weight:600; font-size:11px;">${r.estudios || 'Ninguno'}</span>
                         </div>
                     </div>
-                </div >
+                </div>
                 `;
 
             predioLayer.bindPopup(popupContent); // Se eliminó .openPopup()
@@ -1262,11 +1262,11 @@
             }
 
             let viasHtml = vias.length > 0
-                ? vias.map(v => `< li > ${v.nombre} (Ancho: ${v.ancho_total}m, Calzada: ${v.ancho_calzada}m)</li > `).join('')
+                ? vias.map(v => `<li> ${v.nombre} (Ancho: ${v.ancho_total}m, Calzada: ${v.ancho_calzada}m)</li> `).join('')
                 : "<li>No se identifican vías principales en la base de datos vial.</li>";
 
             const html = `
-                < div style = "margin-bottom: 20px; display:flex; justify-content:space-between; border-bottom: 2px solid #333; padding-bottom: 10px;" >
+                <div style = "margin-bottom: 20px; display:flex; justify-content:space-between; border-bottom: 2px solid #333; padding-bottom: 10px;" >
                         <div>
                             <strong>CLAVE CATASTRAL:</strong> ${d.info_predio.clave}<br>
                             <strong>ÁREA GRÁFICA:</strong> ${d.info_predio.area_escritura.toFixed(2)} m²
@@ -1275,7 +1275,7 @@
                             <strong>PARROQUIA:</strong> ${u.nombre_parroquia || 'Desconocida'}<br>
                             <strong>BARRIO:</strong> ${u.nombre_barrio || 'S/N'}
                         </div>
-                    </div >
+                    </div>
 
                     <div id="miniMap"></div>
 
@@ -1420,7 +1420,6 @@
             let mensajeScore = score >= 8 ? 'Excelente Oportunidad' : (score >= 5 ? 'Propiedad Estándar' : 'Requiere Atención');
 
             let html = `
-                < !--Sección 0: Score de Entorno-- >
                 <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 30px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); color: white; display: flex; align-items: center; justify-content: space-between; gap:20px;">
                     <div>
                         <h3 style="color: #94a3b8; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Score de Atractivo</h3>
@@ -1440,7 +1439,7 @@
                     </div>
                 </div>
 
-                <!--Sección 1: Construcción-- >
+                
                 <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-left: 5px solid #10b981;">
                     <h3 style="color: #065f46; font-size: 20px; display:flex; align-items:center; gap:10px; margin-bottom:15px;">
                         🏗️ ¿Qué puedo construir?
@@ -1466,7 +1465,7 @@
                     </div>
                 </div>
 
-                <!--Sección 2: Retiros-- >
+                
                 <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-left: 5px solid #f59e0b;">
                     <h3 style="color: #92400e; font-size: 20px; display:flex; align-items:center; gap:10px; margin-bottom:15px;">
                         🚧 Espacios Libres (Retiros)
@@ -1478,7 +1477,7 @@
                     </p>
                 </div>
 
-                <!--Sección 3: Impuestos Agues-- >
+                
                 <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-left: 5px solid #3b82f6;">
                     <h3 style="color: #1e40af; font-size: 20px; display:flex; align-items:center; gap:10px; margin-bottom:15px;">
                         💰 Estimador de Impuestos
@@ -1491,7 +1490,7 @@
                     </div>
                 </div>
 
-                <!--Sección 4: FAQ-- >
+                
                 <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-left: 5px solid #8b5cf6;">
                     <h3 style="color: #5b21b6; font-size: 20px; display:flex; align-items:center; gap:10px; margin-bottom:15px;">
                         ❓ Preguntas Frecuentes
@@ -1592,18 +1591,18 @@
 
             // Estilos para la tabla bonita
             const tableStyle = `
-            width: 100 %;
-            border - collapse: collapse;
-            font - family: 'Inter', sans - serif;
-            font - size: 11px;
-            box - shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inter', sans - serif;
+            font-size: 11px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             `;
             const thStyle = `
             background: #1e293b;
             color: white;
             padding: 8px;
-            text - align: left;
-            font - weight: 600;
+            text-align: left;
+            font-weight: 600;
             border: 1px solid #0f172a;
             `;
             const tdStyle = `
@@ -1625,11 +1624,11 @@
 
                 // Etiqueta de vértice en el mapa
                 svgLabels += `
-                < !--Fondo blanco label-- >
+                
                     <circle cx="${sx}" cy="${sy}" r="12" fill="white" stroke="#666" stroke-width="1"/>
-                    <!--Punto -->
+                    
                     <circle cx="${sx}" cy="${sy}" r="3" fill="#ef4444" />
-                    <!--Letra -->
+                    
                 <text x="${sx}" y="${sy}" dy="4" text-anchor="middle" font-family="'Inter', sans-serif" font-size="10" font-weight="800" fill="#1e293b">${label}</text>
             `;
 
@@ -1638,28 +1637,28 @@
                 const midY = (sy + mapY(p2.y)) / 2;
                 // Pequeño halo blanco para el texto de distancia
                 svgLabels += `
-                < rect x = "${midX - 15}" y = "${midY - 6}" width = "30" height = "12" fill = "white" fill - opacity="0.8" rx = "2" />
+                <rect x = "${midX - 15}" y = "${midY - 6}" width = "30" height = "12" fill = "white" fill-opacity="0.8" rx = "2" />
                     <text x="${midX}" y="${midY}" dy="3" text-anchor="middle" font-family="'Inter', sans-serif" font-size="9" fill="#64748b" font-weight="600">${dist.toFixed(2)}m</text>
             `;
 
                 tableHtml += `
-                < tr style = "${i % 2 === 0 ? 'background: #f8fafc;' : 'background: white;'}" >
+                <tr style = "${i % 2 === 0 ? 'background: #f8fafc;' : 'background: white;'}" >
                         <td style="${tdStyle} text-align:center;"><b>${label}</b></td>
                         <td style="${tdStyle}">${p1.x.toFixed(3)} E</td>
                         <td style="${tdStyle}">${p1.y.toFixed(3)} N</td>
                         <td style="${tdStyle} text-align:right;">${dist.toFixed(2)} m</td>
-                    </tr >
+                    </tr>
                 `;
             }
 
             // Norte Bonito
             const northSvg = `
-                < g transform = "translate(${vbW - 60}, 60)" >
+                <g transform = "translate(${vbW - 60}, 60)" >
                      <circle cx="0" cy="0" r="28" fill="white" stroke="#334155" stroke-width="1"/>
-                     <path d="M 0,-22 L 6,-2 L 0,-8 L -6,-2 Z" fill="#ef4444" /> <!--Norte Rojo-- >
-                     <path d="M 0,22 L -6,2 L 0,8 L 6,2 Z" fill="#94a3b8" />   <!--Sur Gris-- >
+                     <path d="M 0,-22 L 6,-2 L 0,-8 L -6,-2 Z" fill="#ef4444" /> <!--Norte Rojo-->
+                     <path d="M 0,22 L -6,2 L 0,8 L 6,2 Z" fill="#94a3b8" />   <!--Sur Gris-->
                 <text x="0" y="-26" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="14" fill="#1e293b">N</text>
-                </g >
+                </g>
                 `;
 
             // Generar Grilla UTM
@@ -1676,7 +1675,7 @@
             for (let x = startX; x <= maxX; x += step) {
                 const sx = mapX(x);
                 gridSvg += `
-                < line x1 = "${sx}" y1 = "0" x2 = "${sx}" y2 = "${vbH}" stroke = "#cbd5e1" stroke - width="1" stroke - dasharray="4,4" />
+                <line x1 = "${sx}" y1 = "0" x2 = "${sx}" y2 = "${vbH}" stroke = "#cbd5e1" stroke-width="1" stroke-dasharray="4,4" />
                     <text x="${sx}" y="12" text-anchor="middle" font-family="'Inter', sans-serif" font-size="9" fill="#64748b">${Math.round(x)}</text>
             `;
             }
@@ -1686,24 +1685,20 @@
             for (let y = startY; y <= maxY; y += step) {
                 const sy = mapY(y);
                 gridSvg += `
-                < line x1 = "0" y1 = "${sy}" x2 = "${vbW}" y2 = "${sy}" stroke = "#cbd5e1" stroke - width="1" stroke - dasharray="4,4" />
+                <line x1 = "0" y1 = "${sy}" x2 = "${vbW}" y2 = "${sy}" stroke = "#cbd5e1" stroke-width="1" stroke-dasharray="4,4" />
                     <text x="4" y="${sy - 2}" text-anchor="start" font-family="'Inter', sans-serif" font-size="9" fill="#64748b">${Math.round(y)}</text>
             `;
             }
 
             const svgContent = `
-                < svg width = "100%" height = "100%" viewBox = "0 0 ${vbW} ${vbH}" xmlns = "http://www.w3.org/2000/svg" style = "background-color: #f8fafc;" >
+                <svg width="100%" height="100%" viewBox="0 0 ${vbW} ${vbH}" xmlns="http://www.w3.org/2000/svg" style="background-color: #f8fafc;">
                     
-                    < !--Grilla UTM-- >
-                ${gridSvg}
+                    ${gridSvg}
                     
-                    < !--Sombra del polígono para efecto 3d sutil-- >
                     <polygon points="${pointsSvg}" fill="none" stroke="#94a3b8" stroke-width="4" transform="translate(1,1)" opacity="0.3"/>
 
-                    <!--Polígono Principal-- >
                     <polygon points="${pointsSvg}" fill="rgba(16, 185, 129, 0.15)" stroke="#334155" stroke-width="2.5" />
                     
-                    <!--Area Label Centro-- >
                 <text x="${vbW / 2}" y="${vbH / 2}" text-anchor="middle" font-family="'Inter', sans-serif" font-size="16" font-weight="700" fill="#94a3b8" opacity="0.4" transform="rotate(-15, ${vbW / 2}, ${vbH / 2})">
                     ÁREA: ${area} m²
                 </text>
@@ -1711,14 +1706,13 @@
                     ${svgLabels}
                     ${northSvg}
                     
-                    < !--Leyenda de Grilla-- >
                 <text x="${vbW - 10}" y="${vbH - 10}" text-anchor="end" font-family="'Inter', sans-serif" font-size="9" fill="#94a3b8">Grilla UTM WGS84 17S (cada ${step}m)</text>
-                </svg >
+                </svg>
                 `;
 
             // Construir tabla completa
             const tableContainer = `
-                < table style = "${tableStyle}" >
+                <table style = "${tableStyle}" >
                     <thead>
                         <tr>
                             <th style="${thStyle} width: 10%;">PUNTO</th>
@@ -1730,7 +1724,7 @@
                     <tbody>
                         ${tableHtml}
                     </tbody>
-                </table >
+                </table>
                 `;
 
             document.getElementById('svgContainer').innerHTML = svgContent;
@@ -1745,7 +1739,7 @@
 
             // Inyectar Análisis de Linderos
             const linderosHtml = `
-                < div style = "width:100%; margin-top:20px; border:1px solid #333; padding:15px;" >
+                <div style = "width:100%; margin-top:20px; border:1px solid #333; padding:15px;" >
                     <h4 style="margin:0 0 10px 0; text-align:center; text-transform:uppercase;">Análisis de Linderos</h4>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:11px;">
                         <div><strong>NORTE:</strong> Calle Pública (proyección)</div>
@@ -1753,7 +1747,7 @@
                         <div><strong>ESTE:</strong> Predio Colindante (Particular)</div>
                         <div><strong>OESTE:</strong> <span style="color:red">Quebrada S/N (Servidumbre 5m) ⚠️</span></div>
                     </div>
-                </div >
+                </div>
                 `;
             document.getElementById('tableContainer').insertAdjacentHTML('afterend', linderosHtml);
 
@@ -1885,7 +1879,6 @@
             const precioSuelo = (u.nombre_parroquia && u.nombre_parroquia.includes("CENTRO")) ? 450 : 180;
 
             const html = `
-                < !--Col 1: Calculadora-- >
                 <div>
                     <div class="calc-section">
                         <div class="calc-header">
@@ -1917,7 +1910,7 @@
                     </div>
                 </div>
 
-                <!--Col 2: Mercado y Usos-- >
+                
                 <div>
                     <div class="calc-section">
                         <div class="calc-header">📊 Mapa de Valores - ${u.nombre_barrio || 'Zona'}</div>
