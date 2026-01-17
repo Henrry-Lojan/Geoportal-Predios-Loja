@@ -1086,8 +1086,8 @@
                     <button class="btn-report" style="background:#0284c7; margin-top:5px;" onclick="generarPlanimetria()">
                         📐 Generar Planimetría (PDF)
                     </button>
-                    <button class="btn-report" style="background:#475569; margin-top:5px;" onclick="verVecinosRadius(this)">
-                        🏠 Ver Predios Vecinos (100m)
+                    <button class="btn-report" style="background:#8b5cf6; margin-top:5px;" onclick="generarReporteCiudadano()">
+                        👋 Reporte Ciudadano (Fácil)
                     </button>
                 `;
             document.getElementById('resultsPanel').innerHTML = html;
@@ -1100,87 +1100,6 @@
                 const toggle = sb.querySelector('.mobile-toggle');
                 if (toggle) toggle.style.transform = 'rotate(0deg)';
             }
-        }
-
-        // --- BÚSQUEDA VECINOS 100M (Re-implementación limpia) ---
-        let capaVecinos = null;
-        async function verVecinosRadius(btn) {
-            if (!currentData?.info_predio?.geometry) return alert("Sin geometría base.");
-            const barrio = currentData.ubicacion?.nombre_barrio;
-            if (!barrio) return alert("Predio sin barrio asociado.");
-
-            if (btn) { btn.innerText = "⏳ Buscando..."; btn.disabled = true; }
-            if (capaVecinos) map.removeLayer(capaVecinos);
-
-            // 1. Traer datos del barrio (SELECT * para evitar error de columna)
-            const { data, error } = await client
-                .from('predios_urbanos')
-                .select('*')
-                .eq('barrio', barrio)
-                .limit(2000);
-
-            if (btn) { btn.innerText = "🏠 Ver Predios Vecinos (100m)"; btn.disabled = false; }
-
-            if (error) {
-                console.error(error);
-                return alert("Error DB: " + error.message);
-            }
-            if (!data?.length) return alert("No hay datos en este barrio.");
-
-            // 2. Filtrar < 100m
-            const geoBase = currentData.info_predio.geometry;
-            const centroBase = getCentroid(geoBase);
-
-            const vecinos = data.filter(p => {
-                if (!p.geojson) return false;
-                if (JSON.stringify(p.geojson) === JSON.stringify(geoBase)) return false; // Excluir mismo
-                const c = getCentroid(p.geojson);
-                return getDistance(centroBase[0], centroBase[1], c[0], c[1]) <= 100;
-            });
-
-            if (!vecinos.length) return alert("Ningún vecino a menos de 100m.");
-
-            // 3. Mapa
-            const features = vecinos.map(p => {
-                // Buscamos cualquier campo que parezca ID
-                const id = p.clave || p.clave_catastral || p.codigo || p.id || "S/N";
-                return { type: "Feature", properties: { clave: id }, geometry: p.geojson };
-            });
-
-            capaVecinos = L.geoJSON(features, {
-                style: {
-                    color: '#334155', weight: 1, fillColor: '#94a3b8', fillOpacity: 0.4,
-                    className: 'vecino-poly'
-                },
-                onEachFeature: (feature, layer) => {
-                    layer.on('mouseover', () => { layer.setStyle({ color: '#f59e0b', weight: 2, fillOpacity: 0.7 }); layer.bringToFront(); });
-                    layer.on('mouseout', () => capaVecinos.resetStyle(layer));
-                    layer.on('click', () => {
-                        if (feature.properties.clave !== "S/N") {
-                            document.getElementById('claveInput').value = feature.properties.clave;
-                            buscarPredio();
-                        }
-                    });
-                    layer.bindTooltip(`Clave: ${feature.properties.clave}`, { direction: 'center' });
-                }
-            }).addTo(map);
-
-            capaVecinos.bringToBack();
-            alert(`Mostrando ${vecinos.length} predios cercanos.`);
-        }
-
-        function getCentroid(geo) {
-            if (!geo) return [0, 0];
-            const coords = (geo.type === 'Polygon') ? geo.coordinates[0] : geo.coordinates[0][0];
-            let lat = 0, lng = 0;
-            coords.forEach(c => { lng += c[0]; lat += c[1]; });
-            return [lat / coords.length, lng / coords.length];
-        }
-
-        function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371000, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
 
         function dibujarPredio(data) {
