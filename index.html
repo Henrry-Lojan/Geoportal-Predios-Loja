@@ -498,10 +498,14 @@
                 border-top: 1px solid rgba(255, 255, 255, 0.1);
                 border-radius: 20px 20px 0 0;
                 z-index: 1000;
-                transition: transform 0.3s ease;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 /* Permite hacer scroll si el contenido es muy largo */
                 display: flex;
                 flex-direction: column;
+            }
+
+            #sidebar.minimized {
+                transform: translateY(calc(100% - 70px));
             }
 
             .sidebar-header {
