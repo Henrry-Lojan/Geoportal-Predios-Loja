@@ -1420,7 +1420,6 @@
             let mensajeScore = score >= 8 ? 'Excelente Oportunidad' : (score >= 5 ? 'Propiedad Estándar' : 'Requiere Atención');
 
             let html = `
-                <!--Sección 0: Score de Entorno-->
                 <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 30px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); color: white; display: flex; align-items: center; justify-content: space-between; gap:20px;">
                     <div>
                         <h3 style="color: #94a3b8; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Score de Atractivo</h3>
@@ -1692,18 +1691,14 @@
             }
 
             const svgContent = `
-                <svg width = "100%" height = "100%" viewBox = "0 0 ${vbW} ${vbH}" xmlns = "http://www.w3.org/2000/svg" style = "background-color: #f8fafc;" >
+                <svg width="100%" height="100%" viewBox="0 0 ${vbW} ${vbH}" xmlns="http://www.w3.org/2000/svg" style="background-color: #f8fafc;">
                     
-                    <!--Grilla UTM-->
-                ${gridSvg}
+                    ${gridSvg}
                     
-                    <!--Sombra del polígono para efecto 3d sutil-->
                     <polygon points="${pointsSvg}" fill="none" stroke="#94a3b8" stroke-width="4" transform="translate(1,1)" opacity="0.3"/>
 
-                    <!--Polígono Principal-->
                     <polygon points="${pointsSvg}" fill="rgba(16, 185, 129, 0.15)" stroke="#334155" stroke-width="2.5" />
                     
-                    <!--Area Label Centro-->
                 <text x="${vbW / 2}" y="${vbH / 2}" text-anchor="middle" font-family="'Inter', sans-serif" font-size="16" font-weight="700" fill="#94a3b8" opacity="0.4" transform="rotate(-15, ${vbW / 2}, ${vbH / 2})">
                     ÁREA: ${area} m²
                 </text>
@@ -1711,7 +1706,6 @@
                     ${svgLabels}
                     ${northSvg}
                     
-                    <!--Leyenda de Grilla-->
                 <text x="${vbW - 10}" y="${vbH - 10}" text-anchor="end" font-family="'Inter', sans-serif" font-size="9" fill="#94a3b8">Grilla UTM WGS84 17S (cada ${step}m)</text>
                 </svg>
                 `;
@@ -1885,7 +1879,6 @@
             const precioSuelo = (u.nombre_parroquia && u.nombre_parroquia.includes("CENTRO")) ? 450 : 180;
 
             const html = `
-                <!--Col 1: Calculadora-->
                 <div>
                     <div class="calc-section">
                         <div class="calc-header">
@@ -2019,4 +2012,3 @@
 </body>
 
 </html>
-
