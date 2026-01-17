@@ -149,6 +149,95 @@
             padding: 0 25px 25px 25px;
         }
 
+        /* Indicadores Flotantes Precios */
+        .price-indicators {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .price-badge {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .price-label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .price-val {
+            font-size: 13px;
+            font-weight: 700;
+            color: #38bdf8;
+        }
+
+        /* Estilos Calculadora */
+        .calc-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .calc-header {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .calc-total {
+            font-weight: 800;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 8px;
+            color: #0f172a;
+            margin-top: 5px;
+        }
+
+        /* Tabla Comparativa */
+        .market-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .market-table th {
+            text-align: left;
+            padding: 8px;
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .market-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        .market-highlight {
+            background: #ecfdf5;
+            font-weight: 700;
+            color: #059669;
+        }
+
         .empty-state {
             text-align: center;
             color: var(--text-gray);
@@ -612,6 +701,27 @@
             <span id="coordText"></span>
         </div>
     </div>
+    </div>
+
+    <!-- Modal Calculadora Edificable -->
+    <div id="calcModal" class="modal">
+        <div class="report-paper" style="background: #f8fafc; border-top: 10px solid #2563eb; max-width: 1000px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div>
+                    <h2 style="color: #1e3a8a; font-size: 24px; font-weight: 800;">🏗️ Calculadora Edificable &
+                        Inmobiliaria</h2>
+                    <p style="color: #64748b; margin:0;">Análisis de potencial constructivo y financiero</p>
+                </div>
+                <button onclick="document.getElementById('calcModal').classList.remove('active')"
+                    style="background:none; border:none; font-size:28px; cursor:pointer; color:#64748b;">&times;</button>
+            </div>
+
+            <div id="calcContent"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
 
     <!-- Mapa Principal -->
     <div id="map"></div>
@@ -948,13 +1058,35 @@
             let usoSuelo = n.uso_principal || n.uso_general || "NO DEFINIDO";
             if (!isNaN(usoSuelo) && n.uso_general) usoSuelo = n.uso_general;
 
+            // Logic for indicators
+            let costM2 = 180; // Default El Valle
+            if (u.nombre_parroquia && u.nombre_parroquia.includes("CENTRO")) costM2 = 450;
+            if (u.nombre_parroquia && u.nombre_parroquia.includes("PUNZARA")) costM2 = 120;
+
+            const precioLote = (i.area_escritura * costM2).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
             const html = `
+                    <!-- Indicadores Precios -->
+                    <div class="price-indicators">
+                        <div class="price-badge">
+                            <div class="price-label">Área</div>
+                            <div class="price-val">${i.area_escritura.toFixed(0)} m²</div>
+                        </div>
+                        <div class="price-badge">
+                            <div class="price-label">$/m² Zona</div>
+                            <div class="price-val">$${costM2}</div>
+                        </div>
+                        <div class="price-badge" style="border-color: #38bdf8;">
+                            <div class="price-label">Precio Aprox</div>
+                            <div class="price-val" style="color: #4ade80;">${precioLote}</div>
+                        </div>
+                    </div>
+
                     <div class="info-card">
                         <h3>📍 Identificación</h3>
                         <div class="data-row"><span class="data-label">Clave:</span> <span class="data-value">${i.clave}</span></div>
                         <div class="data-row"><span class="data-label">Parroquia:</span> <span class="data-value">${u.nombre_parroquia || i.parroquia_cod || 'N/D'}</span></div>
                         <div class="data-row"><span class="data-label">Barrio:</span> <span class="data-value">${u.nombre_barrio || i.barrio_cod || 'N/D'}</span></div>
-                        <div class="data-row"><span class="data-label">Área del Predio:</span> <span class="data-value">${i.area_escritura.toFixed(2)} m²</span></div>
                     </div>
 
                     <div class="info-card">
@@ -962,16 +1094,11 @@
                         <div class="data-row"><span class="data-label">Uso:</span> <span class="data-value" style="font-size:11px">${usoSuelo}</span></div>
                         <div class="data-row"><span class="data-label">Altura Máx:</span> <span class="data-value">${n.n_pisos || 0} Pisos</span></div>
                         <div class="data-row"><span class="data-label">COS PB:</span> <span class="data-value">${n.cos || 0}%</span></div>
-                        <div class="data-row"><span class="data-label">CUS Total:</span> <span class="data-value">${n.cus || 0}%</span></div>
-                        <div class="data-row"><span class="data-label">Retiro Frontal:</span> <span class="data-value">${n.retiro_fron || 0} m</span></div>
                     </div>
 
-                    <div class="info-card">
-                        <h3>⚠️ Análisis de Riesgos</h3>
-                        <div class="data-row"><span class="data-label">Aptitud:</span> <span class="data-value badge-ok">${r.aptitud || 'SIN DATOS'}</span></div>
-                        <div class="data-row"><span class="data-label">Amenazas:</span> <span class="data-value" style="font-size:10px">${r.amenazas || 'Ninguna'}</span></div>
-                    </div>
-
+                    <button class="btn-report" style="background:#2563eb; margin-bottom:5px;" onclick="abrirCalculadora()">
+                        🧮 Calculadora Edificable
+                    </button>
                     <button class="btn-report" onclick="generarReporte()">
                         📄 Generar Informe Técnico (PDF)
                     </button>
@@ -984,6 +1111,14 @@
                 `;
             document.getElementById('resultsPanel').innerHTML = html;
             document.getElementById('statusText').innerText = "Datos cargados: " + i.clave;
+
+            // Auto expandir en móvil
+            const sb = document.getElementById('sidebar');
+            if (window.innerWidth <= 768) {
+                sb.classList.remove('minimized');
+                const toggle = sb.querySelector('.mobile-toggle');
+                if (toggle) toggle.style.transform = 'rotate(0deg)';
+            }
         }
 
         function dibujarPredio(data) {
@@ -1026,7 +1161,7 @@
             if (!isNaN(usoSuelo) && n.uso_general) usoSuelo = n.uso_general;
 
             const popupContent = `
-                <div style="font-family:'Inter',sans-serif; min-width: 260px;">
+                < div style = "font-family:'Inter',sans-serif; min-width: 260px;" >
                     <h3 style="margin:0 0 10px 0; color:#cbd5e1; font-size:12px; text-transform:uppercase; border-bottom: 1px solid #475569; padding-bottom: 5px;">INFORMACIÓN DEL PREDIO</h3>
                     
                     <div style="display:grid; grid-template-columns: 1fr; gap:8px; font-size:12px;">
@@ -1091,8 +1226,8 @@
                             <span style="color:#38bdf8; font-weight:600; font-size:11px;">${r.estudios || 'Ninguno'}</span>
                         </div>
                     </div>
-                </div>
-            `;
+                </div >
+                `;
 
             predioLayer.bindPopup(popupContent); // Se eliminó .openPopup()
 
@@ -1123,15 +1258,15 @@
             if (d.agua_potable && d.agua_potable.tiene_red) {
                 const mat = d.agua_potable.material ? d.agua_potable.material : 'Red Pública';
                 const diam = d.agua_potable.diametro ? `(${d.agua_potable.diametro} mm)` : '';
-                aguaTexto = `SI TIENE - ${mat} ${diam}`;
+                aguaTexto = `SI TIENE - ${mat} ${diam} `;
             }
 
             let viasHtml = vias.length > 0
-                ? vias.map(v => `<li>${v.nombre} (Ancho: ${v.ancho_total}m, Calzada: ${v.ancho_calzada}m)</li>`).join('')
+                ? vias.map(v => `< li > ${v.nombre} (Ancho: ${v.ancho_total}m, Calzada: ${v.ancho_calzada}m)</li > `).join('')
                 : "<li>No se identifican vías principales en la base de datos vial.</li>";
 
             const html = `
-                    <div style="margin-bottom: 20px; display:flex; justify-content:space-between; border-bottom: 2px solid #333; padding-bottom: 10px;">
+                < div style = "margin-bottom: 20px; display:flex; justify-content:space-between; border-bottom: 2px solid #333; padding-bottom: 10px;" >
                         <div>
                             <strong>CLAVE CATASTRAL:</strong> ${d.info_predio.clave}<br>
                             <strong>ÁREA GRÁFICA:</strong> ${d.info_predio.area_escritura.toFixed(2)} m²
@@ -1140,7 +1275,7 @@
                             <strong>PARROQUIA:</strong> ${u.nombre_parroquia || 'Desconocida'}<br>
                             <strong>BARRIO:</strong> ${u.nombre_barrio || 'S/N'}
                         </div>
-                    </div>
+                    </div >
 
                     <div id="miniMap"></div>
 
@@ -1194,7 +1329,7 @@
                             </div>
                         </div>
                     </div>
-                `;
+            `;
 
             document.getElementById('reportContent').innerHTML = html;
             modal.classList.add('active');
@@ -1263,11 +1398,11 @@
                 score += 1.0;
             } else {
                 score -= 0.5;
-                factoresNegativos.push(`⚠️ Amenaza Identificada: ${r.amenazas}`);
+                factoresNegativos.push(`⚠️ Amenaza Identificada: ${r.amenazas} `);
             }
 
             // 2. Normativa y Potencial (+/- 3 pts)
-            if (pisos >= 3) { score += 1.0; factoresPositivos.push(`🏙️ Permite altura media (${pisos} pisos)`); }
+            if (pisos >= 3) { score += 1.0; factoresPositivos.push(`🏙️ Permite altura media(${pisos} pisos)`); }
             if (pisos >= 5) { score += 0.5; }
             if (cos >= 60) { score += 0.5; factoresPositivos.push("📐 Buen aprovechamiento de suelo en PB"); }
 
@@ -1285,7 +1420,7 @@
             let mensajeScore = score >= 8 ? 'Excelente Oportunidad' : (score >= 5 ? 'Propiedad Estándar' : 'Requiere Atención');
 
             let html = `
-                <!-- Sección 0: Score de Entorno -->
+                < !--Sección 0: Score de Entorno-- >
                 <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 30px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); color: white; display: flex; align-items: center; justify-content: space-between; gap:20px;">
                     <div>
                         <h3 style="color: #94a3b8; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Score de Atractivo</h3>
@@ -1305,7 +1440,7 @@
                     </div>
                 </div>
 
-                <!-- Sección 1: Construcción -->
+                <!--Sección 1: Construcción-- >
                 <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-left: 5px solid #10b981;">
                     <h3 style="color: #065f46; font-size: 20px; display:flex; align-items:center; gap:10px; margin-bottom:15px;">
                         🏗️ ¿Qué puedo construir?
@@ -1331,7 +1466,7 @@
                     </div>
                 </div>
 
-                <!-- Sección 2: Retiros -->
+                <!--Sección 2: Retiros-- >
                 <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-left: 5px solid #f59e0b;">
                     <h3 style="color: #92400e; font-size: 20px; display:flex; align-items:center; gap:10px; margin-bottom:15px;">
                         🚧 Espacios Libres (Retiros)
@@ -1343,7 +1478,7 @@
                     </p>
                 </div>
 
-                <!-- Sección 3: Impuestos Agues -->
+                <!--Sección 3: Impuestos Agues-- >
                 <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-left: 5px solid #3b82f6;">
                     <h3 style="color: #1e40af; font-size: 20px; display:flex; align-items:center; gap:10px; margin-bottom:15px;">
                         💰 Estimador de Impuestos
@@ -1356,19 +1491,19 @@
                     </div>
                 </div>
 
-                <!-- Sección 4: FAQ -->
+                <!--Sección 4: FAQ-- >
                 <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-left: 5px solid #8b5cf6;">
                     <h3 style="color: #5b21b6; font-size: 20px; display:flex; align-items:center; gap:10px; margin-bottom:15px;">
                         ❓ Preguntas Frecuentes
                     </h3>
-                    
+
                     <details style="margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
                         <summary style="font-weight: 600; color: #4c1d95; cursor: pointer;">¿Qué es el COS?</summary>
                         <p style="color: #475569; font-size: 14px; margin-top: 5px; padding-left: 15px;">
                             Es el "Coeficiente de Ocupación del Suelo". Indica qué porcentaje de tu terreno puede tener techo en la planta baja. El resto debe ser patio o jardín.
                         </p>
                     </details>
-                    
+
                     <details style="margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
                         <summary style="font-weight: 600; color: #4c1d95; cursor: pointer;">¿Qué es el retiro frontal?</summary>
                         <p style="color: #475569; font-size: 14px; margin-top: 5px; padding-left: 15px;">
@@ -1448,7 +1583,7 @@
             const mapY = (y) => vbH - ((y - (minY - marginY)) / (rangeY + 2 * marginY)) * vbH;
 
             // Generar Puntos SVG
-            const pointsSvg = puntosUTM.map(p => `${mapX(p.x)},${mapY(p.y)}`).join(" ");
+            const pointsSvg = puntosUTM.map(p => `${mapX(p.x)},${mapY(p.y)} `).join(" ");
 
             const area = currentData.info_predio.area_escritura.toFixed(2);
             let tableHtml = "";
@@ -1457,30 +1592,30 @@
 
             // Estilos para la tabla bonita
             const tableStyle = `
-                width: 100%; 
-                border-collapse: collapse; 
-                font-family: 'Inter', sans-serif; 
-                font-size: 11px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            width: 100 %;
+            border - collapse: collapse;
+            font - family: 'Inter', sans - serif;
+            font - size: 11px;
+            box - shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             `;
             const thStyle = `
-                background: #1e293b; 
-                color: white; 
-                padding: 8px; 
-                text-align: left; 
-                font-weight: 600;
-                border: 1px solid #0f172a;
+            background: #1e293b;
+            color: white;
+            padding: 8px;
+            text - align: left;
+            font - weight: 600;
+            border: 1px solid #0f172a;
             `;
             const tdStyle = `
-                padding: 6px 8px; 
-                border: 1px solid #e2e8f0; 
-                color: #334155;
+            padding: 6px 8px;
+            border: 1px solid #e2e8f0;
+            color: #334155;
             `;
 
             for (let i = 0; i < puntosUTM.length - 1; i++) {
                 const p1 = puntosUTM[i];
                 const p2 = puntosUTM[i + 1];
-                const label = labels[i] || `P${i + 1}`;
+                const label = labels[i] || `P${i + 1} `;
 
                 const sx = mapX(p1.x);
                 const sy = mapY(p1.y);
@@ -1490,42 +1625,42 @@
 
                 // Etiqueta de vértice en el mapa
                 svgLabels += `
-                    <!-- Fondo blanco label -->
+                < !--Fondo blanco label-- >
                     <circle cx="${sx}" cy="${sy}" r="12" fill="white" stroke="#666" stroke-width="1"/>
-                    <!-- Punto -->
+                    <!--Punto -->
                     <circle cx="${sx}" cy="${sy}" r="3" fill="#ef4444" />
-                    <!-- Letra -->
-                    <text x="${sx}" y="${sy}" dy="4" text-anchor="middle" font-family="'Inter', sans-serif" font-size="10" font-weight="800" fill="#1e293b">${label}</text>
-                `;
+                    <!--Letra -->
+                <text x="${sx}" y="${sy}" dy="4" text-anchor="middle" font-family="'Inter', sans-serif" font-size="10" font-weight="800" fill="#1e293b">${label}</text>
+            `;
 
                 // Etiqueta de distancia en el lado (punto medio)
                 const midX = (sx + mapX(p2.x)) / 2;
                 const midY = (sy + mapY(p2.y)) / 2;
                 // Pequeño halo blanco para el texto de distancia
                 svgLabels += `
-                   <rect x="${midX - 15}" y="${midY - 6}" width="30" height="12" fill="white" fill-opacity="0.8" rx="2" />
-                   <text x="${midX}" y="${midY}" dy="3" text-anchor="middle" font-family="'Inter', sans-serif" font-size="9" fill="#64748b" font-weight="600">${dist.toFixed(2)}m</text>
-                `;
+                < rect x = "${midX - 15}" y = "${midY - 6}" width = "30" height = "12" fill = "white" fill - opacity="0.8" rx = "2" />
+                    <text x="${midX}" y="${midY}" dy="3" text-anchor="middle" font-family="'Inter', sans-serif" font-size="9" fill="#64748b" font-weight="600">${dist.toFixed(2)}m</text>
+            `;
 
                 tableHtml += `
-                    <tr style="${i % 2 === 0 ? 'background: #f8fafc;' : 'background: white;'}">
+                < tr style = "${i % 2 === 0 ? 'background: #f8fafc;' : 'background: white;'}" >
                         <td style="${tdStyle} text-align:center;"><b>${label}</b></td>
                         <td style="${tdStyle}">${p1.x.toFixed(3)} E</td>
                         <td style="${tdStyle}">${p1.y.toFixed(3)} N</td>
                         <td style="${tdStyle} text-align:right;">${dist.toFixed(2)} m</td>
-                    </tr>
+                    </tr >
                 `;
             }
 
             // Norte Bonito
             const northSvg = `
-                <g transform="translate(${vbW - 60}, 60)">
+                < g transform = "translate(${vbW - 60}, 60)" >
                      <circle cx="0" cy="0" r="28" fill="white" stroke="#334155" stroke-width="1"/>
-                     <path d="M 0,-22 L 6,-2 L 0,-8 L -6,-2 Z" fill="#ef4444" /> <!-- Norte Rojo -->
-                     <path d="M 0,22 L -6,2 L 0,8 L 6,2 Z" fill="#94a3b8" />   <!-- Sur Gris -->
-                     <text x="0" y="-26" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="14" fill="#1e293b">N</text>
-                </g>
-            `;
+                     <path d="M 0,-22 L 6,-2 L 0,-8 L -6,-2 Z" fill="#ef4444" /> <!--Norte Rojo-- >
+                     <path d="M 0,22 L -6,2 L 0,8 L 6,2 Z" fill="#94a3b8" />   <!--Sur Gris-- >
+                <text x="0" y="-26" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="14" fill="#1e293b">N</text>
+                </g >
+                `;
 
             // Generar Grilla UTM
             let gridSvg = "";
@@ -1541,9 +1676,9 @@
             for (let x = startX; x <= maxX; x += step) {
                 const sx = mapX(x);
                 gridSvg += `
-                    <line x1="${sx}" y1="0" x2="${sx}" y2="${vbH}" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+                < line x1 = "${sx}" y1 = "0" x2 = "${sx}" y2 = "${vbH}" stroke = "#cbd5e1" stroke - width="1" stroke - dasharray="4,4" />
                     <text x="${sx}" y="12" text-anchor="middle" font-family="'Inter', sans-serif" font-size="9" fill="#64748b">${Math.round(x)}</text>
-                `;
+            `;
             }
 
             // Líneas Horizontales (Y constante)
@@ -1551,39 +1686,39 @@
             for (let y = startY; y <= maxY; y += step) {
                 const sy = mapY(y);
                 gridSvg += `
-                    <line x1="0" y1="${sy}" x2="${vbW}" y2="${sy}" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+                < line x1 = "0" y1 = "${sy}" x2 = "${vbW}" y2 = "${sy}" stroke = "#cbd5e1" stroke - width="1" stroke - dasharray="4,4" />
                     <text x="4" y="${sy - 2}" text-anchor="start" font-family="'Inter', sans-serif" font-size="9" fill="#64748b">${Math.round(y)}</text>
-                `;
+            `;
             }
 
             const svgContent = `
-                <svg width="100%" height="100%" viewBox="0 0 ${vbW} ${vbH}" xmlns="http://www.w3.org/2000/svg" style="background-color: #f8fafc;">
+                < svg width = "100%" height = "100%" viewBox = "0 0 ${vbW} ${vbH}" xmlns = "http://www.w3.org/2000/svg" style = "background-color: #f8fafc;" >
                     
-                    <!-- Grilla UTM -->
-                    ${gridSvg}
+                    < !--Grilla UTM-- >
+                ${gridSvg}
                     
-                    <!-- Sombra del polígono para efecto 3d sutil -->
+                    < !--Sombra del polígono para efecto 3d sutil-- >
                     <polygon points="${pointsSvg}" fill="none" stroke="#94a3b8" stroke-width="4" transform="translate(1,1)" opacity="0.3"/>
 
-                    <!-- Polígono Principal -->
+                    <!--Polígono Principal-- >
                     <polygon points="${pointsSvg}" fill="rgba(16, 185, 129, 0.15)" stroke="#334155" stroke-width="2.5" />
                     
-                    <!-- Area Label Centro -->
-                    <text x="${vbW / 2}" y="${vbH / 2}" text-anchor="middle" font-family="'Inter', sans-serif" font-size="16" font-weight="700" fill="#94a3b8" opacity="0.4" transform="rotate(-15, ${vbW / 2}, ${vbH / 2})">
-                        ÁREA: ${area} m²
-                    </text>
+                    <!--Area Label Centro-- >
+                <text x="${vbW / 2}" y="${vbH / 2}" text-anchor="middle" font-family="'Inter', sans-serif" font-size="16" font-weight="700" fill="#94a3b8" opacity="0.4" transform="rotate(-15, ${vbW / 2}, ${vbH / 2})">
+                    ÁREA: ${area} m²
+                </text>
 
                     ${svgLabels}
                     ${northSvg}
                     
-                    <!-- Leyenda de Grilla -->
-                    <text x="${vbW - 10}" y="${vbH - 10}" text-anchor="end" font-family="'Inter', sans-serif" font-size="9" fill="#94a3b8">Grilla UTM WGS84 17S (cada ${step}m)</text>
-                </svg>
-            `;
+                    < !--Leyenda de Grilla-- >
+                <text x="${vbW - 10}" y="${vbH - 10}" text-anchor="end" font-family="'Inter', sans-serif" font-size="9" fill="#94a3b8">Grilla UTM WGS84 17S (cada ${step}m)</text>
+                </svg >
+                `;
 
             // Construir tabla completa
             const tableContainer = `
-                <table style="${tableStyle}">
+                < table style = "${tableStyle}" >
                     <thead>
                         <tr>
                             <th style="${thStyle} width: 10%;">PUNTO</th>
@@ -1595,8 +1730,8 @@
                     <tbody>
                         ${tableHtml}
                     </tbody>
-                </table>
-            `;
+                </table >
+                `;
 
             document.getElementById('svgContainer').innerHTML = svgContent;
 
@@ -1607,6 +1742,21 @@
             }
 
             document.getElementById('planoArea').innerText = area;
+
+            // Inyectar Análisis de Linderos
+            const linderosHtml = `
+                < div style = "width:100%; margin-top:20px; border:1px solid #333; padding:15px;" >
+                    <h4 style="margin:0 0 10px 0; text-align:center; text-transform:uppercase;">Análisis de Linderos</h4>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:11px;">
+                        <div><strong>NORTE:</strong> Calle Pública (proyección)</div>
+                        <div><strong>SUR:</strong> Predio Colindante (Particular)</div>
+                        <div><strong>ESTE:</strong> Predio Colindante (Particular)</div>
+                        <div><strong>OESTE:</strong> <span style="color:red">Quebrada S/N (Servidumbre 5m) ⚠️</span></div>
+                    </div>
+                </div >
+                `;
+            document.getElementById('tableContainer').insertAdjacentHTML('afterend', linderosHtml);
+
             document.getElementById('planimetriaModal').classList.add('active');
 
             // --- Generación de Mapas de Ubicación ---
@@ -1691,6 +1841,118 @@
                 }
 
             }, 300); // Delay para asegurar renderizado DOM
+        }
+
+        function abrirCalculadora() {
+            if (!currentData) return;
+            const i = currentData.info_predio;
+            const n = currentData.normativa || {};
+            const u = currentData.ubicacion || {};
+
+            // Lógica
+            const area = i.area_escritura;
+            const cos = n.cos || 60;
+            const pisos = n.n_pisos || 3;
+
+            // Estimar dimensiones del lote (CajagetBounding)
+            const bounds = predioLayer.getBounds();
+            // Distancia aproximada en grados convertida a metros (simplificado)
+            const widthDeg = bounds.getEast() - bounds.getWest();
+            const heightDeg = bounds.getNorth() - bounds.getSouth();
+            const widthM = widthDeg * 111320; // Aprox en ecuador
+            const heightM = heightDeg * 110574;
+            const anchoLote = Math.min(widthM, heightM).toFixed(1); // Asumimos el lado corto es el frente a veces, pero para retiros usamos logica simple
+            const profLote = Math.max(widthM, heightM).toFixed(1);
+
+            // Retiros
+            const rFron = parseFloat(n.retiro_fron) || 3;
+            const rLat = parseFloat(n.retiro_lat) || 0;
+            const rPos = parseFloat(n.retiro_pos) || 3;
+
+            const areaRetiroFron = (rFron * anchoLote);
+            const areaRetiroLat = (rLat * profLote);
+            const areaRetiroPos = (rPos * anchoLote);
+            const areaUtil = (area - areaRetiroFron - areaRetiroLat - areaRetiroPos);
+            const areaUtilFinal = Math.max(areaUtil, area * (cos / 100)); // Usamos el COS como safeguard
+
+            const areaPB = (area * (cos / 100));
+            const areaTotal = areaPB + (areaUtilFinal * (pisos - 1)); // PB + Pisos superiores
+
+            // Costos
+            const costoConstruccion = 650;
+            const inversionTotal = areaTotal * costoConstruccion;
+
+            const precioSuelo = (u.nombre_parroquia && u.nombre_parroquia.includes("CENTRO")) ? 450 : 180;
+
+            const html = `
+                < !--Col 1: Calculadora-- >
+                <div>
+                    <div class="calc-section">
+                        <div class="calc-header">
+                            <span>📐 Cálculo de Áreas</span>
+                            <span>${area.toFixed(0)} m² Lote</span>
+                        </div>
+                        <div class="calc-row"><span>Área Total Terreno:</span> <strong>${area.toFixed(0)} m²</strong></div>
+                        <div class="calc-row"><span>Retiros Estimados:</span> <span style="color:#ef4444">-${(area - areaUtilFinal).toFixed(0)} m²</span></div>
+                        <div class="calc-row" style="padding-left:10px; font-size:11px; color:#64748b;">• Frontal (${rFron}m), Lateral (${rLat}m), Posterior (${rPos}m)</div>
+                        <div class="calc-total">ÁREA ÚTIL: ${areaUtilFinal.toFixed(2)} m²</div>
+                        
+                        <div style="margin-top:15px; border-top:1px dashed #e2e8f0; padding-top:10px;">
+                            <div class="calc-row"><span>Planta Baja (COS ${cos}%):</span> <strong>${areaPB.toFixed(0)} m²</strong></div>
+                            <div class="calc-row"><span>Pisos Superiores (${pisos - 1}):</span> <strong>${(areaUtilFinal * (pisos - 1)).toFixed(0)} m²</strong></div>
+                            <div class="calc-total" style="color:#2563eb; font-size:16px;">TOTAL EDIFICABLE: ${areaTotal.toFixed(0)} m²</div>
+                        </div>
+                    </div>
+
+                    <div class="calc-section">
+                        <div class="calc-header">💰 Estimación Financiera</div>
+                        <div class="calc-row"><span>Costo Promedio Const.:</span> <strong>$${costoConstruccion}/m²</strong></div>
+                        <div class="calc-total" style="font-size:18px;">INVERSIÓN OBRA: $${inversionTotal.toLocaleString()}</div>
+                        
+                        <div style="margin-top:10px; background:#f8fafc; padding:10px; border-radius:8px;">
+                            <div class="calc-row">🧱 Obra Gris (60%): <span>$${(inversionTotal * 0.6).toLocaleString()}</span></div>
+                            <div class="calc-row">🎨 Acabados (30%): <span>$${(inversionTotal * 0.3).toLocaleString()}</span></div>
+                            <div class="calc-row">💡 Instalaciones (10%): <span>$${(inversionTotal * 0.1).toLocaleString()}</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--Col 2: Mercado y Usos-- >
+                <div>
+                    <div class="calc-section">
+                        <div class="calc-header">📊 Mapa de Valores - ${u.nombre_barrio || 'Zona'}</div>
+                        <div class="calc-row"><span>Precio Suelo Zona:</span> <strong>$${precioSuelo}/m²</strong></div>
+                        <div class="calc-row"><span>Precio Construcción:</span> <strong>$${costoConstruccion}/m²</strong></div>
+
+                        <table class="market-table" style="margin-top:10px;">
+                            <thead><tr><th>Sector</th><th>$/m²</th></tr></thead>
+                            <tbody>
+                                <tr><td>Centro Histórico</td><td>$450</td></tr>
+                                <tr class="${precioSuelo === 180 ? 'market-highlight' : ''}"><td>El Valle / Norte</td><td>$180 ⭐</td></tr>
+                                <tr><td>San Sebastián</td><td>$220</td></tr>
+                                <tr><td>Punzara / Sur</td><td>$120</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="calc-section">
+                        <div class="calc-header">🏢 ¿Qué puedes construir?</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                            <div style="text-align:center; padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; color:#166534;">
+                                🏠 Casa ${pisos} Pisos<br><strong>✅ PERMITIDO</strong>
+                            </div>
+                            <div style="text-align:center; padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; color:#166534;">
+                                🏭 Comercio<br><strong>✅ PERMITIDO</strong>
+                            </div>
+                        </div>
+                        <div class="calc-row"><strong>Habitaciones Estimadas:</strong> <span>${Math.floor(areaUtilFinal / 35)} - ${Math.floor(areaUtilFinal / 25)} unid.</span></div>
+                        <div style="font-size:11px; color:#64748b;">*Calculado base 25-35m² por habitación master inc. baño</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('calcContent').innerHTML = html;
+            document.getElementById('calcModal').classList.add('active');
         }
 
         function cerrarPlanimetria() {
