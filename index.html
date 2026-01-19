@@ -836,6 +836,47 @@
             }
         }
     </style>
+    <style>
+        /* --- AJUSTES DE ESPACIO Y CONFLICTOS (User Request) --- */
+
+        /* 1. Control de Capas: Reducido LIGERAMENTE sin scroll */
+        .leaflet-control-layers-expanded {
+            /* max-height: 45vh;  <-- ELIMINADO (Scroll) */
+            /* overflow-y: auto;  <-- ELIMINADO (Scroll) */
+
+            transform: scale(0.92);
+            /* Ajustado al 92% (solicitado +7%) */
+            transform-origin: top right;
+            /* Anclado arriba a la derecha */
+
+            font-size: 11px !important;
+            padding: 5px 8px !important;
+            opacity: 0.95;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .leaflet-control-layers label {
+            margin-bottom: 3px !important;
+        }
+
+        /* 2. Panel de botones (Planimetría, etc) más pequeño */
+        #rightPanel {
+            right: 15px !important;
+            bottom: 25px !important;
+            width: 170px !important;
+            /* Más angosto */
+            gap: 6px !important;
+            transform: scale(0.95);
+            /* Reducir al 95% del tamaño original */
+            transform-origin: bottom right;
+        }
+
+        .btn-report {
+            padding: 6px 10px !important;
+            /* Botones menos altos */
+            font-size: 12px !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -1051,6 +1092,9 @@
         let datosBarrios = [];
         let datosParroquias = []; // Store parroquias globally for clipping
         let activeBarrioLayers = {}; // Mapa para guardar referencias a capas de barrios activas { "NOMBRE_PARROQUIA": layer }
+        let activeBarrioNames = new Set(); // Nombres de barrios visibles actualmente
+        let prediosVistaLayer; // Capa de predios por vista
+        let isPrediosLayerActive = false;
 
         // Inicializar Mapa
         function initMap() {
@@ -1059,7 +1103,7 @@
                 proj4.defs("EPSG:32717", "+proj=utm +zone=17 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
             }
 
-            map = L.map('map', { zoomControl: false }).setView([-4.005, -79.210], 14);
+            map = L.map('map', { zoomControl: false }).setView([-4.005, -79.210], 16);
 
             const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
@@ -1095,8 +1139,25 @@
 
             // Evento Zoom para ajustar etiquetas
             map.on('zoomend', updateLabelSize);
-            map.on('zoomend', updateLabelSize);
             updateLabelSize(); // Init
+
+            // --- CONFIGURACIÓN CAPA PREDIOS (VIEWPORT) ---
+            // --- CONFIGURACIÓN CAPA PREDIOS (VIEWPORT) ---
+            prediosVistaLayer = L.featureGroup(); // Init SIN añadir al mapa
+            isPrediosLayerActive = false; // Inactivo por defecto (no se carga nada)
+
+            // NO agregamos al control aquí para que salga al último
+            // layerControl.addOverlay se mueve a cargarCapas()
+
+            // Carga inicial evitada (se carga solo al activar)
+            // cargarPrediosVista();
+
+            // Event listeners para la capa se manejan manualmente en el toggle
+            map.on('moveend', function () {
+                if (isPrediosLayerActive) {
+                    cargarPrediosVista();
+                }
+            });
 
             // Crear Pane para Mapas de Calor (z-index 450 para que esté por encima de otras capas base, pero bajo popups)
             map.createPane('heatmapPane');
@@ -1294,6 +1355,10 @@
             await cargarCapaBarrios();
             cargarMapasCalor();
             cargarMapaPrecioSuelo();
+
+
+
+            // Capa Catastro ahora se controla por botón, no en el control de capas
         }
 
         async function cargarCapaParroquias() {
@@ -1412,6 +1477,28 @@
             layerControl.addOverlay(geoJsonLayer, "🏘️ Barrios (Todos)");
         }
 
+
+        function togglePrediosVista() {
+            const btn = document.getElementById('btnCatastro');
+            if (map.hasLayer(prediosVistaLayer)) {
+                map.removeLayer(prediosVistaLayer);
+                isPrediosLayerActive = false;
+                prediosVistaLayer.clearLayers();
+                if (btn) {
+                    btn.innerHTML = '<span>🗺️</span> <span>Ver Catastro (Zona)</span>';
+                    btn.style.background = '#059669'; // Regresar a verde
+                }
+            } else {
+                prediosVistaLayer.addTo(map);
+                isPrediosLayerActive = true;
+                cargarPrediosVista();
+                if (btn) {
+                    btn.innerHTML = '<span>🚫</span> <span>Ocultar Catastro</span>';
+                    btn.style.background = '#be123c'; // Rojo para "Apagar"
+                }
+            }
+        }
+
         async function verVecinos50m() {
             if (!currentData || !currentData.info_predio || !currentData.info_predio.geometry) {
                 alert("Primero busca un predio.");
@@ -1422,6 +1509,11 @@
                 map.removeLayer(vecinosLayer);
                 vecinosLayer = null;
                 // Si ya existía, lo quitamos (toggle)
+                const btn = document.getElementById('btnVecinos');
+                if (btn) {
+                    btn.innerHTML = '<span>🏘️</span> <span>Ver Vecinos (50m)</span>';
+                    btn.style.background = '#f43f5e';
+                }
                 return;
             }
 
@@ -1510,7 +1602,79 @@
             vecinosLayer.addLayer(bufferLayer); // Agrupar para borrar juntos
 
             map.fitBounds(vecinosLayer.getBounds());
-            // alert(`Se encontraron ${vecinos.length} predios a 50m.`);
+            // Actualizar botón a estado "ON"
+            const btn = document.getElementById('btnVecinos');
+            if (btn) {
+                btn.innerHTML = '<span>🚫</span> <span>Ocultar Vecinos</span>';
+                btn.style.background = '#be123c';
+            }
+        }
+
+
+        // --- CARGA DINÁMICA DE PREDIOS (VIEWPORT) ---
+        async function cargarPrediosVista() {
+            // Si no hay capa activa o zoom insuficiente, limpiar
+            const z = map.getZoom();
+            if (!isPrediosLayerActive || z < 15) { // Un poco más permisivo (15)
+                if (prediosVistaLayer && prediosVistaLayer.getLayers().length > 0) prediosVistaLayer.clearLayers();
+                return;
+            }
+
+            // Estrategia: "SOLAMENTE DE ESE BARRIO"
+            // Si hay barrios activos, filtramos por ellos.
+
+            // Estrategia: "SOLAMENTE DE ESE BARRIO"
+            // Si activeBarrioNames tiene elementos, usamos filtro.
+            // Si NO tiene elementos (size === 0), Mostramos TODO (Default).
+
+            const barriosFilter = activeBarrioNames.size > 0 ? Array.from(activeBarrioNames) : null;
+
+            console.log("Cargando predios. Filtro:", barriosFilter || "TODOS");
+
+            const b = map.getBounds();
+            const { data, error } = await client.rpc('get_predios_in_view', {
+                min_lon: b.getWest(),
+                min_lat: b.getSouth(),
+                max_lon: b.getEast(),
+                max_lat: b.getNorth(),
+                barrios_names: barriosFilter
+            });
+
+            if (error) {
+                console.error("Error viewport predios:", error);
+                return;
+            }
+
+            if (data) {
+                prediosVistaLayer.clearLayers(); // Limpiar previo
+                const features = data.map(d => ({
+                    type: "Feature",
+                    properties: { clave: d.clave_cata },
+                    geometry: d.geometry
+                }));
+
+                const layer = L.geoJSON(features, {
+                    style: {
+                        color: '#000000',      // Borde Negro
+                        weight: 0.8,           // Fino
+                        fillColor: '#86efac',  // Verde (Green-300)
+                        fillOpacity: 1         // Solido
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.bindPopup(`<b style="color:black">${feature.properties.clave}</b>`);
+                        layer.on('click', () => {
+                            document.getElementById('claveInput').value = feature.properties.clave;
+                            buscarPredio();
+                        });
+                    }
+                });
+                if (prediosVistaLayer) {
+                    prediosVistaLayer.clearLayers();
+                    prediosVistaLayer.addLayer(layer);
+                }
+            } else {
+                console.log("No data returned from RPC");
+            }
         }
 
         // --- FUNCIONES NUEVAS PARA GESTIÓN DE BARRIOS POR PARROQUIA ---
@@ -1523,6 +1687,11 @@
             // Filtrar barrios
             const barriosFiltrados = datosBarrios.filter(b => b.parroquia === nombreParroquia);
             if (barriosFiltrados.length === 0) return;
+
+            // ACTUALIZAR LISTA DE BARRIOS ACTIVOS
+            barriosFiltrados.forEach(b => activeBarrioNames.add(b.barrio));
+            // RECARGAR PREDIOS CON NUEVO FILTRO
+            cargarPrediosVista();
 
             // Crear features
             const features = barriosFiltrados.map(item => ({
@@ -1580,6 +1749,15 @@
             if (layer) {
                 map.removeLayer(layer);
                 delete activeBarrioLayers[nombreParroquia];
+
+                // REMOVER BARRIOS DE LA LISTA ACTIVA
+                // Ojo: Si un barrio pertenece a varias capas (raro pero posible), esto lo quitaría.
+                // Asumimos barrio único por parroquia.
+                const barriosFiltrados = datosBarrios.filter(b => b.parroquia === nombreParroquia);
+                barriosFiltrados.forEach(b => activeBarrioNames.delete(b.barrio));
+
+                // RECARGAR PREDIOS
+                cargarPrediosVista();
             }
         }
 
@@ -1698,8 +1876,11 @@
                 <button class="btn-report" style="background:#8b5cf6;" onclick="generarReporteCiudadano()">
                     <span>👋</span> <span>Reporte Ciudadano</span>
                 </button>
-                <button class="btn-report" style="background:#f43f5e;" onclick="verVecinos50m()">
+                <button id="btnVecinos" class="btn-report" style="background:#f43f5e;" onclick="verVecinos50m()">
                     <span>🏘️</span> <span>Ver Vecinos (50m)</span>
+                </button>
+                <button id="btnCatastro" class="btn-report" style="background:#059669;" onclick="togglePrediosVista()">
+                    <span>🗺️</span> <span>Ver Catastro (Zona)</span>
                 </button>
             `;
             const rp = document.getElementById('rightPanel');
@@ -2846,10 +3027,8 @@
         }
 
         function checkUserRole() {
-            const savedRole = localStorage.getItem('geoLoja_userRole');
-            if (!savedRole) {
-                document.getElementById('roleModal').classList.add('active');
-            }
+            // Siempre mostrar el modal de selección de rol al inicio
+            document.getElementById('roleModal').classList.add('active');
         }
 
         // Función para móviles: Colapsar/Expandir panel
