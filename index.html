@@ -20,6 +20,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
     <!-- Turf.js for Geometry Operations -->
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+
     <style>
         :root {
             --primary: #6366f1;
@@ -896,6 +898,25 @@
             </div>
             <button class="btn-search" onclick="buscarPredio()">🔍 Consultar Predio</button>
             <button class="btn-clear" onclick="limpiarMapa()">Limpiar Búsqueda</button>
+
+            <!-- Separador Visual -->
+            <div style="margin: 15px 0; border-top: 1px dashed #334155;"></div>
+
+            <!-- Buscador Coordenadas / Google Maps -->
+            <label style="font-size:12px; color:#cbd5e1; margin-bottom:5px; display:block;">📍 Ubicación Google Maps /
+                GPS</label>
+            <div class="search-box" style="display:flex; gap:5px;">
+                <input type="text" id="coordInput" placeholder="Pega el link o coordenadas aquí..."
+                    style="font-size:12px; background:#0f172a; border-color:#334155;">
+                <button onclick="buscarPorCoordenadas()"
+                    style="width:50px; background:#3b82f6; border:none; border-radius:8px; cursor:pointer;"
+                    title="Ir a coordenadas">
+                    🚀
+                </button>
+            </div>
+            <p style="font-size:10px; color:#64748b; margin-top:5px;">
+                Acepta: Links de Maps, Coordenadas (-4.0, -79.2) o Grados (3°59'S...)
+            </p>
         </div>
 
         <div class="results-panel" id="resultsPanel">
@@ -1073,7 +1094,6 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const { createClient } = supabase;
@@ -1142,7 +1162,7 @@
             updateLabelSize(); // Init
 
             // --- CONFIGURACIÓN CAPA PREDIOS (VIEWPORT) ---
-            // --- CONFIGURACIÓN CAPA PREDIOS (VIEWPORT) ---
+
             prediosVistaLayer = L.featureGroup(); // Init SIN añadir al mapa
             isPrediosLayerActive = false; // Inactivo por defecto (no se carga nada)
 
@@ -1355,10 +1375,6 @@
             await cargarCapaBarrios();
             cargarMapasCalor();
             cargarMapaPrecioSuelo();
-
-
-
-            // Capa Catastro ahora se controla por botón, no en el control de capas
         }
 
         async function cargarCapaParroquias() {
@@ -1804,6 +1820,96 @@
 
             mostrarResultados(data);
             dibujarPredio(data);
+        }
+
+        // --- BUSCADOR INTELIGENTE DE COORDENADAS ---
+        let marcadorBusqueda = null;
+
+        async function buscarPorCoordenadas() {
+            const input = document.getElementById('coordInput').value.trim();
+            if (!input) return alert("Pega un link de Google Maps o coordenadas.");
+
+            let lat = null, lon = null;
+
+            // 1. Intentar Coordenadas Decimales (ej: -4.00, -79.20)
+            // Regex: Busca dos números flotantes separados por coma o espacio
+            const decimalRegex = /(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/;
+            const decimalMatch = input.match(decimalRegex);
+
+            if (decimalMatch) {
+                // Verificar orden. Google suele ser Lat, Lon. Pero GeoJSON es Lon, Lat.
+                // Asumimos Lat, Lon para inputs humanos comunes en esta zona.
+                // Validamos rango ecuador: Lat ~ -4, Lon ~ -79
+                let v1 = parseFloat(decimalMatch[1]);
+                let v2 = parseFloat(decimalMatch[2]);
+
+                // Heurística simple para Loja: Lat es el pequeño (-3 a -5), Lon es el grande (-79...)
+                if (Math.abs(v1) > Math.abs(v2)) { [v1, v2] = [v2, v1]; } // Swap si v1 parece longitud
+
+                lat = v1; lon = v2;
+            }
+
+            // 2. Intentar Link Largo Google Maps (ej: .../maps/@-3.99,-79.20,15z...)
+            if (!lat) {
+                const googleMapsRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+                const gmMatch = input.match(googleMapsRegex);
+                if (gmMatch) {
+                    lat = parseFloat(gmMatch[1]);
+                    lon = parseFloat(gmMatch[2]);
+                }
+            }
+
+            // 3. Intentar Link "place" Google Maps (ej: .../place/Lat+Lon/@...)
+            // A veces viene como .../place/3°59'50.4"S+79°12'22.5"W/...
+            if (!lat) {
+                // Esto es complejo de parsear directo de URL encoded, pero intentemos buscar DMS en el texto
+                // Regex DMS simple: 3°59'50.4"S 
+                // Convertir a decimal es tedioso, probemos si hay decimales escondidos en la URL (suelen estar en el @ o en !3d..!4d..)
+
+                // !3d-3.9973428!4d-79.2062454
+                const dataParamRegex = /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/;
+                const dataMatch = input.match(dataParamRegex);
+                if (dataMatch) {
+                    lat = parseFloat(dataMatch[1]);
+                    lon = parseFloat(dataMatch[2]);
+                }
+            }
+
+            // 4. Intentar Coordenadas DMS (Grados Minutos Segundos)
+            // ej: 3°59'50.4"S 79°12'22.5"W
+            if (!lat) {
+                // Parseador muy básico para formato comun
+                try {
+                    const dmsRegex = /(\d+)°(\d+)'([\d.]+)"([NS])[\s,]+(\d+)°(\d+)'([\d.]+)"([EW])/i;
+                    const dmsMatch = input.match(dmsRegex);
+                    if (dmsMatch) {
+                        // Lat
+                        let d1 = parseFloat(dmsMatch[1]), m1 = parseFloat(dmsMatch[2]), s1 = parseFloat(dmsMatch[3]), h1 = dmsMatch[4].toUpperCase();
+                        lat = d1 + m1 / 60 + s1 / 3600;
+                        if (h1 === 'S') lat = -lat;
+
+                        // Lon
+                        let d2 = parseFloat(dmsMatch[5]), m2 = parseFloat(dmsMatch[6]), s2 = parseFloat(dmsMatch[7]), h2 = dmsMatch[8].toUpperCase();
+                        lon = d2 + m2 / 60 + s2 / 3600;
+                        if (h2 === 'W') lon = -lon;
+                    }
+                } catch (e) { console.log("Error DMS", e); }
+            }
+
+            // Validación Final
+            if (lat && lon && !isNaN(lat) && !isNaN(lon)) {
+                // Mover mapa
+                map.setView([lat, lon], 19);
+
+                // Marcador Simple
+                if (marcadorBusqueda) map.removeLayer(marcadorBusqueda);
+                marcadorBusqueda = L.marker([lat, lon]).addTo(map)
+                    .bindPopup(`<b>📍 Ubicación</b><br>Lat: ${lat.toFixed(6)}<br>Lon: ${lon.toFixed(6)}`)
+                    .openPopup();
+
+            } else {
+                alert("No pude entender esa ubicación. 😓\n\nIntenta copiar coordenadas decimales (ej: -4.00, -79.20) o asegurarte que el link tenga números visibles.");
+            }
         }
 
         function mostrarError(msg) {
@@ -2445,15 +2551,37 @@
                 if (rangeX === 0) rangeX = 1;
                 if (rangeY === 0) rangeY = 1;
 
-                const marginX = rangeX * 0.25;
-                const marginY = rangeY * 0.25;
+                // Ajustar Márgenes
+                const marginX = rangeX * 0.1;
+                const marginY = rangeY * 0.1;
 
                 // ViewBox
                 const vbW = 800;
                 const vbH = 500;
 
-                // Calcular Escala (px / metro) para referencia
-                // 2. Fetch de Colindantes (Supabase)
+                // Calcular Escala UNIFORME para mantener proporción
+                const scaleX = vbW / (rangeX + 2 * marginX);
+                const scaleY = vbH / (rangeY + 2 * marginY);
+                const k = Math.min(scaleX, scaleY); // Factor de escala (px/metro)
+                const scale = k; // Alias para compatibilidad
+
+                // Calcular dimensiones reales del dibujo en pantalla
+                const drawW = rangeX * k;
+                const drawH = rangeY * k;
+
+                // Centrar el dibujo en el ViewBox
+                const offsetX = (vbW - drawW) / 2;
+                const offsetY = (vbH - drawH) / 2;
+
+                // Funciones de mapeo con escala uniforme y centrado
+                // mapX: (x - minX) * k + offsetX
+                const mapX = (x) => (x - minX) * k + offsetX;
+                // mapY: Invertir eje Y. vbH - ((y - minY) * k + offsetY) -> No, mejor: offsetY + (maxY - y) * k
+                // SVG Y crece hacia abajo. UTM Y crece hacia arriba.
+                // Alineamos maxY con la parte superior (offsetY)
+                const mapY = (y) => offsetY + (maxY - y) * k;
+
+                // --- RESTAURAR FETCH DE COLINDANTES ---
                 let vecinos = [];
                 try {
                     // Intentar buscar por barrio para acotar
@@ -2461,10 +2589,10 @@
                     if (barrio) {
                         const { data: vData } = await client
                             .from('predios_urbanos')
-                            .select('clave, propietario') // Intentamos traer clave y propietario
+                            .select('clave, propietario')
                             .eq('barrio_cod', barrio)
                             .neq('clave', currentData.info_predio.clave)
-                            .limit(10); // Traemos max 10 para linderos
+                            .limit(10);
                         if (vData) vecinos = vData;
                     }
                 } catch (err) { console.log("No se pudo cargar vecinos", err); }
@@ -2473,13 +2601,7 @@
                 if (vecinos.length === 0) {
                     vecinos = [{ clave: "LOTE COLINDANTE", propietario: "DESCONOCIDO" }];
                 }
-
-                const totalWidthM = rangeX + 2 * marginX;
-                const scale = vbW / totalWidthM;
-
-                // Escalar UTM a SVG
-                const mapX = (x) => ((x - (minX - marginX)) / (rangeX + 2 * marginX)) * vbW;
-                const mapY = (y) => vbH - ((y - (minY - marginY)) / (rangeY + 2 * marginY)) * vbH;
+                // -------------------------------------
 
                 // Generar Puntos SVG
                 const pointsSvg = puntosUTM.map(p => `${mapX(p.x)},${mapY(p.y)} `).join(" ");
@@ -2961,7 +3083,7 @@
                 // 2. Generar Poligono Interior (Retiros) con Turf
                 // Usamos un buffer negativo promedio para simplificacion visual
                 // 3m es aprox 0.000027 grados.
-                const bufferVal = -0.003; // ~3 metros en km aprox 0.003 si unit es km
+                const bufferVal = -0.003; // ~3 metros en km aprox 0.003 si unit is km
                 let ptsInner = "";
                 let hasInner = false;
 
