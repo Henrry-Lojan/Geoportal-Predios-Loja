@@ -11,7 +11,8 @@
     <!-- Fuentes Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@700;800&display=swap"
         rel="stylesheet">
     <!-- Proj4js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
@@ -30,7 +31,7 @@
             --bg-panel: #1e293b;
             --text-light: #f8fafc;
             --text-gray: #94a3b8;
-            --sidebar-width: 400px;
+            --sidebar-width: 350px;
         }
 
         * {
@@ -59,9 +60,10 @@
         }
 
         .sidebar-header {
-            padding: 15px 25px;
+            padding: 15px 20px;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
+            /* Centrado General */
             align-items: center;
             cursor: pointer;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -74,12 +76,28 @@
         }
 
         .logo-title {
-            font-size: 24px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            /* Reducido a 22px */
             font-weight: 800;
-            color: white;
+            color: #f1f5f9;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            /* Centrado */
+            gap: 6px;
+            letter-spacing: -0.5px;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+        }
+
+        .logo-title span {
+            background: linear-gradient(135deg, #3b82f6 0%, #22d3ee 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 22px;
+            /* Ajustado */
+            filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
         }
 
         .logo-subtitle {
@@ -100,7 +118,7 @@
 
         input[type="text"] {
             width: 100%;
-            padding: 14px 15px;
+            padding: 10px 12px;
             background: #0f172a;
             border: 1px solid #334155;
             color: white;
@@ -118,7 +136,7 @@
 
         .btn-search {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background: var(--primary);
             color: white;
             border: none;
@@ -133,9 +151,6 @@
         }
 
         .btn-clear {
-            width: 100%;
-            margin-top: 10px;
-            padding: 10px;
             background: transparent;
             border: 1px solid #334155;
             color: var(--text-gray);
@@ -146,6 +161,7 @@
         .btn-clear:hover {
             background: #334155;
             color: white;
+            border-color: #ef4444;
         }
 
         /* --- PANEL DE RESULTADOS --- */
@@ -155,33 +171,7 @@
             padding: 0 25px 25px 25px;
         }
 
-        /* Indicadores Flotantes Precios */
-        .price-indicators {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
 
-        .price-badge {
-            background: #1e293b;
-            border: 1px solid #334155;
-            padding: 8px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .price-label {
-            font-size: 10px;
-            color: #94a3b8;
-            text-transform: uppercase;
-        }
-
-        .price-val {
-            font-size: 13px;
-            font-weight: 700;
-            color: #38bdf8;
-        }
 
         /* Estilos Calculadora */
         .calc-section {
@@ -254,27 +244,27 @@
         .info-card {
             background: #0f172a;
             border: 1px solid #334155;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
         }
 
         .info-card h3 {
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             color: var(--primary);
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             letter-spacing: 0.5px;
             font-weight: 700;
             border-bottom: 1px solid #334155;
-            padding-bottom: 5px;
+            padding-bottom: 4px;
         }
 
         .data-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 13px;
+            margin-bottom: 2px;
+            font-size: 11px;
         }
 
         .data-label {
@@ -597,6 +587,56 @@
             font-weight: 600;
             color: #f8fafc;
         }
+
+        /* --- ACTION GRID (Botones Cuadrados) --- */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 10px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 70px;
+            /* Altura fija uniforme */
+        }
+
+        .action-btn:hover {
+            background: #334155;
+            transform: translateY(-2px);
+            border-color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-btn.active {
+            background: #be123c;
+            /* Estado Activo (Rojo/Cancel) */
+            border-color: #f43f5e;
+        }
+
+        .action-icon {
+            font-size: 20px;
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+        }
+
+        .action-label {
+            font-size: 9px;
+            color: #cbd5e1;
+            text-align: center;
+            line-height: 1.2;
+            font-weight: 500;
+        }
     </style>
     <!-- Estilos Responsivos (Mobile) -->
     <style>
@@ -874,9 +914,8 @@
         }
 
         .btn-report {
-            padding: 6px 10px !important;
-            /* Botones menos altos */
             font-size: 12px !important;
+            padding: 6px 10px !important;
         }
     </style>
 </head>
@@ -886,9 +925,13 @@
     <!-- Sidebar -->
     <div id="sidebar">
         <div class="sidebar-header" onclick="toggleSidebarMobile()">
-            <div class="logo-title">🏛️ GeoLoja</div>
-            <div class="mobile-toggle" style="display:none; font-size:18px; color:#94a3b8;">🔽</div>
-            <div class="logo-subtitle">Sistema de Información y Gestión Catastral</div>
+            <div class="header-content" style="width: 100%; text-align: center;">
+                <div class="logo-title">
+                    <span>GEO</span>PORTAL LOJA
+                </div>
+                <div class="mobile-toggle" style="display:none; font-size:18px; color:#94a3b8;">🔽</div>
+                <div class="logo-subtitle" style="text-align:center;">GESTIÓN CATASTRAL INTELIGENTE</div>
+            </div>
         </div>
 
         <div class="search-container">
@@ -896,27 +939,27 @@
                 <input type="text" id="claveInput" placeholder="Clave Catastral (Ej: 110103...)"
                     value="1101030404320013">
             </div>
-            <button class="btn-search" onclick="buscarPredio()">🔍 Consultar Predio</button>
-            <button class="btn-clear" onclick="limpiarMapa()">Limpiar Búsqueda</button>
+            <div style="display:flex; gap:5px;">
+                <button class="btn-search" onclick="buscarPredio()" style="flex:1;">🔍 Consultar</button>
+                <button class="btn-clear" onclick="limpiarMapa()"
+                    style="width:40px; display:flex; align-items:center; justify-content:center;"
+                    title="Limpiar Búsqueda">🗑️</button>
+            </div>
 
-            <!-- Separador Visual -->
-            <div style="margin: 15px 0; border-top: 1px dashed #334155;"></div>
+            <!-- Separador Visual Minimalista -->
+            <div style="margin: 12px 0; border-top: 1px solid #1e293b;"></div>
 
-            <!-- Buscador Coordenadas / Google Maps -->
-            <label style="font-size:12px; color:#cbd5e1; margin-bottom:5px; display:block;">📍 Ubicación Google Maps /
-                GPS</label>
-            <div class="search-box" style="display:flex; gap:5px;">
-                <input type="text" id="coordInput" placeholder="Pega el link o coordenadas aquí..."
-                    style="font-size:12px; background:#0f172a; border-color:#334155;">
+            <!-- Buscador Coordenadas Minimalista -->
+            <div class="search-box" style="display:flex; gap:5px; align-items: center; margin-bottom: 0;">
+                <span style="font-size: 16px;">📍</span>
+                <input type="text" id="coordInput" placeholder="Pegar Link Maps o Coordenadas..."
+                    style="font-size:12px; background:#0f172a; border-color:#334155; padding: 10px;">
                 <button onclick="buscarPorCoordenadas()"
-                    style="width:50px; background:#3b82f6; border:none; border-radius:8px; cursor:pointer;"
+                    style="width:40px; background:#3b82f6; border:none; border-radius:8px; cursor:pointer;"
                     title="Ir a coordenadas">
                     🚀
                 </button>
             </div>
-            <p style="font-size:10px; color:#64748b; margin-top:5px;">
-                Acepta: Links de Maps, Coordenadas (-4.0, -79.2) o Grados (3°59'S...)
-            </p>
         </div>
 
         <div class="results-panel" id="resultsPanel">
@@ -925,6 +968,8 @@
                 <p>Ingresa una clave catastral para ver<br>la información técnica, retiros y normativa.</p>
             </div>
         </div>
+
+
 
         <div class="status-bar">
             <span id="statusText">Listo</span>
@@ -958,10 +1003,11 @@
     <!-- Mapa Principal -->
     <div id="map"></div>
 
+
     <!-- Panel Derecho de Acciones (Flotante) -->
-    <div id="rightPanel">
-        <!-- Botones se inyectan aquí -->
-    </div>
+    <div id="rightPanel"></div>
+
+
 
 
 
@@ -1501,16 +1547,16 @@
                 isPrediosLayerActive = false;
                 prediosVistaLayer.clearLayers();
                 if (btn) {
-                    btn.innerHTML = '<span>🗺️</span> <span>Ver Catastro (Zona)</span>';
-                    btn.style.background = '#059669'; // Regresar a verde
+                    btn.innerHTML = '<span class="action-icon">🗺️</span> <span class="action-label">Catastro<br>(Zona)</span>';
+                    btn.classList.remove('active'); // NORMAL STYLE
                 }
             } else {
                 prediosVistaLayer.addTo(map);
                 isPrediosLayerActive = true;
                 cargarPrediosVista();
                 if (btn) {
-                    btn.innerHTML = '<span>🚫</span> <span>Ocultar Catastro</span>';
-                    btn.style.background = '#be123c'; // Rojo para "Apagar"
+                    btn.innerHTML = '<span class="action-icon">🚫</span> <span class="action-label">Ocultar<br>Catastro</span>';
+                    btn.classList.add('active'); // RED STYLE
                 }
             }
         }
@@ -1527,8 +1573,8 @@
                 // Si ya existía, lo quitamos (toggle)
                 const btn = document.getElementById('btnVecinos');
                 if (btn) {
-                    btn.innerHTML = '<span>🏘️</span> <span>Ver Vecinos (50m)</span>';
-                    btn.style.background = '#f43f5e';
+                    btn.innerHTML = '<span class="action-icon">🏘️</span> <span class="action-label">Vecinos<br>(50m)</span>';
+                    btn.classList.remove('active');
                 }
                 return;
             }
@@ -1621,8 +1667,8 @@
             // Actualizar botón a estado "ON"
             const btn = document.getElementById('btnVecinos');
             if (btn) {
-                btn.innerHTML = '<span>🚫</span> <span>Ocultar Vecinos</span>';
-                btn.style.background = '#be123c';
+                btn.innerHTML = '<span class="action-icon">🚫</span> <span class="action-label">Ocultar<br>Vecinos</span>';
+                btn.classList.add('active');
             }
         }
 
@@ -1935,63 +1981,74 @@
             const precioLote = (i.area_escritura * costM2).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
             const html = `
-                    <!-- Indicadores Precios -->
-                    <div class="price-indicators">
-                        <div class="price-badge">
-                            <div class="price-label">Área</div>
-                            <div class="price-val">${i.area_escritura.toFixed(0)} m²</div>
+                    <!-- Info Unificada Lista (Minimalista) -->
+                    <div class="info-card" style="margin-bottom:0;">
+                        <!-- Encabezado con Clave y Área -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #334155; padding-bottom:8px;">
+                            <span style="font-size:12px; color:#38bdf8; font-weight:700;">Clave: ${i.clave}</span>
+                            <span style="font-size:13px; color:#f8fafc; font-weight:700;">${i.area_escritura.toFixed(0)} m²</span>
                         </div>
-                        <div class="price-badge">
-                            <div class="price-label">$/m² Zona</div>
-                            <div class="price-val">$${costM2}</div>
+                        
+                        <!-- Lista de Datos Homogénea -->
+                        <div class="data-row" style="margin-bottom:5px;">
+                            <span class="data-label">Ubicación:</span> 
+                            <span class="data-value" style="font-size:11px; text-align:right; color:#f1f5f9;">${u.nombre_barrio || 'S/N'}, ${u.nombre_parroquia || 'S/D'}</span>
                         </div>
-                        <div class="price-badge" style="border-color: #38bdf8;">
-                            <div class="price-label">Precio Aprox</div>
-                            <div class="price-val" style="color: #4ade80;">${precioLote}</div>
+                        
+                        <div class="data-row" style="margin-bottom:5px;">
+                             <span class="data-label">Uso Suelo:</span> 
+                             <span class="data-value" style="font-size:11px; text-align:right; color:#f1f5f9;">${usoSuelo}</span>
+                        </div>
+
+                        <div class="data-row" style="margin-bottom:5px;">
+                             <span class="data-label">Altura máx. pisos:</span> 
+                             <span class="data-value" style="font-size:11px; text-align:right; color:#f1f5f9;">${n.n_pisos || 0} Pisos</span>
+                        </div>
+
+                        <div class="data-row" style="margin-bottom:0;">
+                             <span class="data-label">COS PB:</span> 
+                             <span class="data-value" style="font-size:11px; text-align:right; color:#f1f5f9;">${n.cos || 0}%</span>
                         </div>
                     </div>
-
-                    <div class="info-card">
-                        <h3>📍 Identificación</h3>
-                        <div class="data-row"><span class="data-label">Clave:</span> <span class="data-value">${i.clave}</span></div>
-                        <div class="data-row"><span class="data-label">Parroquia:</span> <span class="data-value">${u.nombre_parroquia || i.parroquia_cod || 'N/D'}</span></div>
-                        <div class="data-row"><span class="data-label">Barrio:</span> <span class="data-value">${u.nombre_barrio || i.barrio_cod || 'N/D'}</span></div>
                     </div>
 
-                    <div class="info-card">
-                        <h3>🏗️ Normativa</h3>
-                        <div class="data-row"><span class="data-label">Uso:</span> <span class="data-value" style="font-size:11px">${usoSuelo}</span></div>
-                        <div class="data-row"><span class="data-label">Altura Máx:</span> <span class="data-value">${n.n_pisos || 0} Pisos</span></div>
-                        <div class="data-row"><span class="data-label">COS PB:</span> <span class="data-value">${n.cos || 0}%</span></div>
+                    <!-- Botones de Acción en Grid (2 Filas x 3 Columnas) -->
+                    <div class="action-grid">
+                        <div class="action-btn" onclick="generarReporte()">
+                            <span class="action-icon">📄</span>
+                            <span class="action-label">Informe<br>Técnico</span>
+                        </div>
+                        <div class="action-btn" onclick="generarPlanimetria()">
+                            <span class="action-icon">📐</span>
+                            <span class="action-label">Generar<br>Planimetría</span>
+                        </div>
+                        <div class="action-btn" onclick="abrirCalculadora()">
+                            <span class="action-icon">🧮</span>
+                            <span class="action-label">Calculadora<br>Edificable</span>
+                        </div>
+                        <div class="action-btn" onclick="generarReporteCiudadano()">
+                            <span class="action-icon">👋</span>
+                            <span class="action-label">Reporte<br>Ciudadano</span>
+                        </div>
+                        <div class="action-btn" id="btnVecinos" onclick="verVecinos50m()">
+                            <span class="action-icon">🏘️</span>
+                            <span class="action-label">Vecinos<br>(50m)</span>
+                        </div>
+                        <div class="action-btn" id="btnCatastro" onclick="togglePrediosVista()">
+                            <span class="action-icon">🗺️</span>
+                            <span class="action-label">Catastro<br>(Zona)</span>
+                        </div>
                     </div>
                 `;
             document.getElementById('resultsPanel').innerHTML = html;
             document.getElementById('statusText').innerText = "Datos cargados: " + i.clave;
 
-            // --- INYECTAR BOTONES EN PANEL DERECHO ---
-            const rightPanelHtml = `
-                <button class="btn-report" onclick="generarReporte()">
-                    <span>📄</span> <span>Generar Informe Técnico</span>
-                </button>
-                <button class="btn-report" style="background:#0284c7;" onclick="generarPlanimetria()">
-                    <span>📐</span> <span>Generar Planimetría</span>
-                </button>
-                <button class="btn-report" style="background:#2563eb;" onclick="abrirCalculadora()">
-                    <span>🧮</span> <span>Calculadora Edificable</span>
-                </button>
-                <button class="btn-report" style="background:#8b5cf6;" onclick="generarReporteCiudadano()">
-                    <span>👋</span> <span>Reporte Ciudadano</span>
-                </button>
-                <button id="btnVecinos" class="btn-report" style="background:#f43f5e;" onclick="verVecinos50m()">
-                    <span>🏘️</span> <span>Ver Vecinos (50m)</span>
-                </button>
-                <button id="btnCatastro" class="btn-report" style="background:#059669;" onclick="togglePrediosVista()">
-                    <span>🗺️</span> <span>Ver Catastro (Zona)</span>
-                </button>
-            `;
+            // --- LIMPIAR PANEL DERECHO (Ya no se usa) ---
             const rp = document.getElementById('rightPanel');
-            rp.innerHTML = rightPanelHtml;
-            rp.style.display = 'flex';
+            if (rp) {
+                rp.innerHTML = '';
+                rp.style.display = 'none';
+            }
 
             // Re-aplicar clases para animacion si se desea, o simple display
             // Auto expandir en móvil
@@ -3146,6 +3203,7 @@
 
             // 3. Cerrar Modal
             document.getElementById('roleModal').classList.remove('active');
+
         }
 
         function checkUserRole() {
@@ -3183,7 +3241,10 @@
         window.onload = function () {
             initMap();
             checkUserRole();
+
         };
+
+
     </script>
 </body>
 
